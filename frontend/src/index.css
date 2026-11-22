@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  body { @apply bg-slate-50 text-navy-900 font-sans text-sm; }
+  h1, h2, h3, h4 { @apply font-display tracking-tight text-navy-900; }
+  :focus-visible { @apply outline-none ring-2 ring-gold-400/60 ring-offset-1; }
+  ::selection { @apply bg-gold-300 text-navy-950; }
+}
+
+@layer components {
+  .surface { @apply bg-white border border-slate-200 rounded-lg; }
+  .label { @apply block text-xs font-medium text-slate-700 mb-1.5; }
+  .field {
+    @apply block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-navy-900 placeholder:text-slate-400
+           focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900 disabled:bg-slate-50 disabled:text-slate-500;
+  }
+  .field-error { @apply border-rose-500 focus:border-rose-600 focus:ring-rose-600; }
+  .brand-rule { @apply h-[3px] w-full bg-gold-400; }
+  .eyebrow { @apply text-2xs font-semibold uppercase tracking-[0.08em] text-slate-500; }
+  .grid-bg {
+    background-image: linear-gradient(to right, rgb(226 232 240 / .7) 1px, transparent 1px),
+                      linear-gradient(to bottom, rgb(226 232 240 / .7) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+}
+
+/* Printable membership card: only the card sheet prints, never the app chrome. */
+.print-sheet { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-page-in, .animate-progress, .animate-soft-pulse { animation: none !important; }
+}
+
+@media print {
+  @page { size: A4 portrait; margin: 14mm; }
+  html, body { background: #fff !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  #root, .no-print { display: none !important; }
+  .print-sheet { display: block !important; }
+
+  /* Staff card print jobs (CardPrintSheet): named pages override the default A4 margin. */
+  .print-sheet--a4 { page: a4sheet; }
+  .print-sheet--cr80 { page: cr80; }
+  .cr80-page { width: 85.6mm; height: 53.98mm; break-after: page; overflow: hidden; }
+  .cr80-page:last-child { break-after: auto; }
+}
+
+@page a4sheet { size: A4 portrait; margin: 0; }
+@page cr80 { size: 85.6mm 53.98mm; margin: 0; }
