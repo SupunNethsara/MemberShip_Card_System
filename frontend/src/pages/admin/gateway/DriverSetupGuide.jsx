@@ -13,6 +13,34 @@ import { useLocale } from '../../../hooks';
 
 export const PAYMENT_GUIDES = {
   en: {
+    onepay: {
+      title: 'Onepay (Sri Lanka: Visa, Master, Amex, LANKAQR) — Primary gateway',
+      portalUrl: 'https://merchant.onepay.lk',
+      portalName: 'Onepay Merchant Portal',
+      steps: [
+        {
+          title: '1. Register & Verify Merchant Account',
+          desc: 'Sign up at onepay.lk with your Business Registration (BR), Director NIC and bank account details, and wait for KYC approval.',
+        },
+        {
+          title: '2. Create an App',
+          desc: 'In the Onepay Merchant Portal, open Apps and create an app for this website. Copy its App ID, App Token and Hash Salt.',
+        },
+        {
+          title: '3. Set the Callback URL (required)',
+          desc: 'In the same app\'s settings, paste the Webhook URL shown below as the Callback URL. Payments are only confirmed when Onepay calls this URL — without it, paid invoices stay pending.',
+        },
+        {
+          title: '4. Configure & Save',
+          desc: 'Set Environment to "Live", enter the App ID, App Token and Hash Salt, turn "Active at checkout" ON, keep "Default" ON so Onepay is the primary method, and click Save.',
+        },
+        {
+          title: '5. Test with a Small Payment',
+          desc: 'Make a low-value membership payment and confirm the invoice turns "Paid" within a few seconds. If it stays pending, recheck the Callback URL and Hash Salt.',
+        },
+      ],
+      sandboxTip: 'Onepay uses a single API host; the Environment switch only controls the Sandbox badge at checkout. Use live credentials only.',
+    },
     payhere: {
       title: 'PayHere (Sri Lanka: Visa, Master, eZ Cash, mCash, FriMi, Genie)',
       portalUrl: 'https://merchant.payhere.lk',
@@ -111,6 +139,34 @@ export const PAYMENT_GUIDES = {
     },
   },
   si: {
+    onepay: {
+      title: 'Onepay (ශ්‍රී ලංකා: Visa, Master, Amex, LANKAQR) — ප්‍රධාන ගෙවීම් ක්‍රමය',
+      portalUrl: 'https://merchant.onepay.lk',
+      portalName: 'Onepay Merchant Portal',
+      steps: [
+        {
+          title: '1. Merchant ගිණුම ලියාපදිංචි කිරීම',
+          desc: 'onepay.lk වෙත ගොස් ව්‍යාපාර ලියාපදිංචි සහතිකය (BR), අධ්‍යක්ෂක NIC සහ බැංකු ගිණුම් විස්තර ලබාදී ලියාපදිංචි වී KYC අනුමැතිය ලැබෙන තෙක් රැඳී සිටින්න.',
+        },
+        {
+          title: '2. App එකක් සෑදීම',
+          desc: 'Onepay Merchant Portal එකේ Apps වෙත ගොස් මෙම වෙබ් අඩවිය සඳහා App එකක් සාදන්න. එහි App ID, App Token සහ Hash Salt පිටපත් කරගන්න.',
+        },
+        {
+          title: '3. Callback URL එක සැකසීම (අනිවාර්යයි)',
+          desc: 'එම App එකේ settings තුළ, පහත පෙන්වන Webhook URL එක Callback URL ලෙස ඇතුළත් කරන්න. Onepay මෙම URL එකට call කළ විට පමණක් ගෙවීම තහවුරු වේ — එය නොමැතිව ගෙවූ ඉන්වොයිස් pending ලෙසම පවතී.',
+        },
+        {
+          title: '4. මෙහි සකසා Save කිරීම',
+          desc: 'Environment එක "Live" ලෙස තෝරා, App ID, App Token සහ Hash Salt ඇතුළත් කරන්න. "Active at checkout" ON කර, Onepay ප්‍රධාන ක්‍රමය ලෙස තබා ගැනීමට "Default" ON කර Save කරන්න.',
+        },
+        {
+          title: '5. කුඩා ගෙවීමකින් පරීක්ෂා කිරීම',
+          desc: 'අඩු වටිනාකමක සාමාජිකත්ව ගෙවීමක් කර, තත්පර කිහිපයකින් ඉන්වොයිසය "Paid" වන බව තහවුරු කරගන්න. Pending ලෙසම පවතී නම් Callback URL සහ Hash Salt නැවත පරීක්ෂා කරන්න.',
+        },
+      ],
+      sandboxTip: 'Onepay එක් API host එකක් පමණක් භාවිතා කරයි; Environment switch එකෙන් checkout හි Sandbox badge එක පමණක් පාලනය වේ. සැබෑ (live) credentials පමණක් භාවිතා කරන්න.',
+    },
     payhere: {
       title: 'PayHere (ශ්‍රී ලංකා: Visa, Master, eZ Cash, mCash, FriMi, Genie)',
       portalUrl: 'https://merchant.payhere.lk',
@@ -447,7 +503,7 @@ export function DriverSetupGuideCard({ driver, type = 'payment' }) {
   if (!guide) return null;
 
   return (
-    <div className="rounded-xl border border-gold-200/70 bg-gradient-to-r from-gold-50/60 via-white to-gold-50/40 p-3.5 shadow-sm">
+    <div className="rounded-lg border border-gold-200/70 bg-gold-50/50 p-3.5">
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
           <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gold-500/10 text-gold-600">

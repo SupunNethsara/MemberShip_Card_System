@@ -1,6 +1,7 @@
 import { useId } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 import { date } from '../../lib/format';
+import ArtworkCardFront, { cardArtFor } from './ArtworkCardFront';
 
 /**
  * Jeewanasaviya membership card — one design shared by the digital card, the member's own print,
@@ -71,11 +72,16 @@ function Divider({ u }) {
 }
 
 export default function CardFront({
-  unit = 'mm', variant = 'standard', name, memberCode, nic, joinedAt, tierName, tierColor = NAVY,
+  unit = 'mm', variant = 'standard', name, memberCode, nic, joinedAt, tierSlug, tierName, tierColor = NAVY,
   expiresAt, verifyUrl, active = true, brandSi = 'ජීවනසවිය', brandEn = 'JEEWANASAVIYA', logoUrl, locale = 'en', labels = {},
 }) {
   const u = makeUnit(unit);
   const gid = useId().replace(/:/g, '');
+  const art = cardArtFor(tierSlug, tierName);
+  if (art) {
+    // Client artwork tiers (Silver / Gold / Platinum): name, NIC and QR move to the card back.
+    return <ArtworkCardFront unit={unit} art={art} memberCode={memberCode} expiresAt={expiresAt} active={active} inactiveLabel={labels.inactive || 'Inactive'} />;
+  }
   const pill = active ? tierColor : '#e11d48';
   const isId = variant === 'id';
   const L = { member: 'Member', memberId: 'Member ID', validUntil: 'Valid until', nic: 'NIC', joined: 'Joined', inactive: 'Inactive', ...labels };
@@ -168,18 +174,28 @@ export default function CardFront({
 }
 
 /** Card back: navy band, usage note, member since / ID, support contact, terms. */
-export function CardBack({ unit = 'mm', memberCode, memberSince, contactPhone, contactEmail, locale = 'en', labels = {} }) {
+export function CardBack({ unit = 'mm', name, memberCode, memberSince, verifyUrl, contactPhone, contactEmail, locale = 'en', labels = {} }) {
   const u = makeUnit(unit);
   const L = {
-    memberId: 'Member ID', memberSince: 'Member since', support: 'Support',
+    memberId: 'Member ID', memberSince: 'Member since', support: 'Support', scan: 'Scan to verify',
     howTo: 'Present this card with a valid photo ID at any partner outlet to receive member pricing.',
     nonTransferable: 'This card is personal and non-transferable. Benefits are subject to partner terms.',
     ...labels,
   };
   return (
     <CardShell unit={unit}>
-      <div style={{ position: 'absolute', left: 0, right: 0, top: u.mm(4.5), height: u.mm(7), background: 'linear-gradient(90deg, #0b1631, #1c2f5c)', borderBottom: `${u.mm(0.8)} solid ${GOLD}` }} />
-      <div style={{ position: 'absolute', left: u.mm(5), right: u.mm(5), top: u.mm(14.5) }}>
+      <div style={{ position: 'absolute', left: 0, right: 0, top: u.mm(4.5), height: u.mm(7), background: 'linear-gradient(90deg, #0b1631, #1c2f5c)', borderBottom: `${u.mm(0.8)} solid ${GOLD}`, display: 'flex', alignItems: 'center', padding: `0 ${u.mm(5)}`, boxSizing: 'border-box' }}>
+        {name && <div style={{ color: '#fff', fontSize: u.pt(8.4), fontWeight: 700, letterSpacing: '0.02em', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{name}</div>}
+      </div>
+      {verifyUrl && (
+        <div style={{ position: 'absolute', right: u.mm(5), top: u.mm(14.2), textAlign: 'center' }}>
+          <div style={{ padding: u.mm(0.8), background: '#fff', borderRadius: u.mm(1), border: `${u.mm(0.2)} solid #e2e8f0`, lineHeight: 0 }}>
+            <QRCodeSVG value={verifyUrl} size={256} level="M" fgColor={NAVY} bgColor="#ffffff" style={{ width: u.mm(17), height: u.mm(17), display: 'block' }} />
+          </div>
+          <div style={{ fontSize: u.pt(4.4), color: '#64748b', marginTop: u.mm(0.6), whiteSpace: 'nowrap' }}>{L.scan}</div>
+        </div>
+      )}
+      <div style={{ position: 'absolute', left: u.mm(5), right: u.mm(verifyUrl ? 26 : 5), top: u.mm(14.5) }}>
         <div style={{ fontSize: u.pt(6.4), lineHeight: 1.45, color: '#334155' }}>{L.howTo}</div>
         <div style={{ display: 'flex', gap: u.mm(6), marginTop: u.mm(2.4) }}>
           <Field u={u} label={L.memberSince} value={memberSince ? date(memberSince, locale) : '—'} size={6.8} />

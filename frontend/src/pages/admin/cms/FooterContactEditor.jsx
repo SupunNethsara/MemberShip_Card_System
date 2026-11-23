@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowUp, Mail, Phone, Plus, Save, Trash2 } from 'lucide-react';
-import { Alert, Button, Can, Card, Icon, Input, MultilingualInput, Segmented, Skeleton } from '../../../components/ui';
+import { Alert, Button, Can, Card, Icon, Input, LoadError, MultilingualInput, Segmented, Skeleton } from '../../../components/ui';
 import { useCmsQuery, useSaveCmsMutation } from '../../../app/api';
 import { usePermission, useToast } from '../../../hooks';
 import { emptyTr, errorMessage, fieldErrors } from '../../../lib/format';
@@ -15,7 +15,7 @@ const blankSocial = () => Object.fromEntries(SOCIAL_PLATFORMS.map((p) => [p.key,
 export default function FooterContactEditor() {
   const can = usePermission();
   const toast = useToast();
-  const { data, isLoading } = useCmsQuery();
+  const { data, isLoading, refetch } = useCmsQuery();
   const [save, { isLoading: saving, error }] = useSaveCmsMutation();
   const [social, setSocial] = useState(blankSocial());
   const [extra, setExtra] = useState([]);
@@ -45,6 +45,7 @@ export default function FooterContactEditor() {
   };
 
   if (isLoading) return <Skeleton className="h-96 rounded-lg" />;
+  if (!data) return <LoadError onRetry={refetch} />;
 
   return (
     <Card

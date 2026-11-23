@@ -10,7 +10,7 @@ class SmsGatewayRequest extends ApiRequest
     public function rules(): array
     {
         $creating = $this->isMethod('post');
-        $driver = $creating ? $this->input('driver') : $this->route('sms_gateway')?->driver;
+        $driver = $creating ? $this->input('driver') : ($this->route('smsGateway')?->driver ?? $this->route('sms_gateway')?->driver);
 
         return [
             'driver' => [$creating ? 'required' : 'prohibited', Rule::in(array_keys(SmsGatewayFactory::DRIVERS))],

@@ -2,13 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { Building2, Check, CreditCard, Globe, Landmark, Lock, ShieldCheck } from 'lucide-react';
-import { Alert, Button, Card, Icon, Skeleton, Spinner } from '../../components/ui';
+import { Alert, Button, Card, Icon, LoadError, Skeleton, Spinner } from '../../components/ui';
 import { SlipDropzone } from './SlipUploadModal';
 import { useCheckoutMutation, usePublicGatewaysQuery, usePublicTiersQuery, useUploadSlipMutation } from '../../app/api';
 import { useDocumentTitle, useT, useToast } from '../../hooks';
 import { duration, errorMessage, money } from '../../lib/format';
 
-const DRIVER_ICON = { payhere: CreditCard, stripe: Globe, webxpay: Building2, manual: Landmark };
+const DRIVER_ICON = { onepay: CreditCard, payhere: CreditCard, stripe: Globe, webxpay: Building2, manual: Landmark };
 
 /** Submits a hidden auto-POST form (PayHere / WebXPay hosted checkout). */
 function postForm(url, fields) {
@@ -33,8 +33,8 @@ export default function CheckoutPage() {
   const toast = useToast();
   const [params] = useSearchParams();
   const user = useSelector((s) => s.auth.user);
-  const { data: tiers = [], isLoading: tiersLoading } = usePublicTiersQuery();
-  const { data: gateways = [], isLoading: gwLoading } = usePublicGatewaysQuery();
+  const { data: tiers = [], isLoading: tiersLoading, isError: tiersError, refetch: refetchTiers } = usePublicTiersQuery();
+  const { data: gateways = [], isLoading: gwLoading, isError: gwError, refetch: refetchGateways } = usePublicGatewaysQuery();
   const [checkout, { isLoading: paying, error }] = useCheckoutMutation();
   const [uploadSlip, { isLoading: uploading, error: slipError }] = useUploadSlipMutation();
 
@@ -138,6 +138,7 @@ export default function CheckoutPage() {
         <div className="space-y-6">
           <section>
             <p className="eyebrow mb-3">1 · {t('checkout.step1')}</p>
+            {tiersError && !tiers.length && <LoadError compact onRetry={refetchTiers} />}
             <div className="grid gap-3 sm:grid-cols-3">
               {tiersLoading && [0, 1, 2].map((i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
               {tiers.map((x) => {
@@ -163,6 +164,8 @@ export default function CheckoutPage() {
             <p className="eyebrow mb-3">2 · {t('checkout.step2')}</p>
             {gwLoading ? (
               <Skeleton className="h-32 rounded-lg" />
+            ) : gwError && !gateways.length ? (
+              <LoadError compact onRetry={refetchGateways} />
             ) : gateways.length === 0 ? (
               <Alert tone="warning">{t('checkout.noGateways')}</Alert>
             ) : (
@@ -202,12 +205,12 @@ export default function CheckoutPage() {
                   <span className="font-display text-xl font-semibold tabular-nums">{money(tier.price, 'LKR', locale)}</span>
                 </div>
               </>
-            ) : <Skeleton className="h-20" />}
+            ) : tiersError ? <p className="text-sm text-slate-500">{t('common.loadFailedTitle')}</p> : <Skeleton className="h-20" />}
             {error && <Alert tone="danger" className="mt-4">{errorMessage(error)}</Alert>}
             <Button size="lg" className="mt-5 w-full justify-center" icon={Lock} loading={paying} disabled={!tierId || !gatewayId} onClick={pay}>
               {t('checkout.pay')}
             </Button>
-            <p className="mt-3 flex items-center justify-center gap-1.5 text-2xs text-slate-500"><Icon icon={ShieldCheck} size={12} /> 256-bit TLS · PCI-DSS gateways</p>
+            <p className="mt-3 flex items-center justify-center gap-1.5 text-2xs text-slate-500"><Icon icon={ShieldCheck} size={12} /> {t('footer.securePayment')}</p>
           </Card>
         </aside>
       </div>

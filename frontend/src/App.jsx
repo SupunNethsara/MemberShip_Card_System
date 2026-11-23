@@ -6,13 +6,14 @@ import { useMeQuery } from './app/api';
 import { setUser } from './app/authSlice';
 import { PageLoader, Toaster, TopProgress } from './components/ui';
 import PublicLayout from './components/layout/PublicLayout';
+// Ships with the main bundle so the first visit goes straight from the boot screen to the page (no second loader).
+import HomePage from './pages/public/HomePage';
 import PortalLayout from './components/layout/PortalLayout';
 import AdminLayout from './components/layout/AdminLayout';
 import { GuestOnly, RequireAuth, RequireMember, RequirePermission, RequireStaff } from './components/layout/Guards';
 import { usePermission } from './hooks';
 
 // Public
-const HomePage = lazyPage(() => import('./pages/public/HomePage'));
 const PartnersPage = lazyPage(() => import('./pages/public/PartnersPage'));
 const TermsPage = lazyPage(() => import('./pages/public/TermsPage'));
 const PrivacyPage = lazyPage(() => import('./pages/public/PrivacyPage'));
@@ -44,6 +45,7 @@ const PaymentGatewaysPage = lazyPage(() => import('./pages/admin/PaymentGateways
 const SmsGatewaysPage = lazyPage(() => import('./pages/admin/SmsGatewaysPage'));
 const SmsTemplatesPage = lazyPage(() => import('./pages/admin/SmsTemplatesPage'));
 const SmsLogsPage = lazyPage(() => import('./pages/admin/SmsLogsPage'));
+const InquiriesPage = lazyPage(() => import('./pages/admin/InquiriesPage'));
 const CmsPage = lazyPage(() => import('./pages/admin/CmsPage'));
 const RolesPage = lazyPage(() => import('./pages/admin/RolesPage'));
 const StaffPage = lazyPage(() => import('./pages/admin/StaffPage'));
@@ -70,6 +72,7 @@ const ADMIN_LANDING = [
   ['gateways.payment.view|gateways.payment.manage', 'settings/payment-gateways'],
   ['gateways.sms.view|gateways.sms.manage', 'settings/sms-gateways'],
   ['sms.logs.view', 'sms-logs'],
+  ['inquiries.view', 'inquiries'],
   ['cms.view', 'cms'],
   ['roles.view', 'roles'],
 ];
@@ -130,6 +133,7 @@ export default function App() {
             <Route path="settings/sms-gateways" element={guard('gateways.sms.view|gateways.sms.manage', <SmsGatewaysPage />)} />
             <Route path="sms-templates" element={guard('sms.templates.manage|gateways.sms.view', <SmsTemplatesPage />)} />
             <Route path="sms-logs" element={guard('sms.logs.view', <SmsLogsPage />)} />
+            <Route path="inquiries" element={guard('inquiries.view', <InquiriesPage />)} />
             <Route path="cms" element={guard('cms.view', <CmsPage />)} />
             <Route path="roles" element={guard('roles.view', <RolesPage />)} />
             <Route path="staff" element={guard('staff.view', <StaffPage />)} />

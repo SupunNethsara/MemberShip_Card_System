@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Search, Store } from 'lucide-react';
-import { Button, EmptyState, Icon, Skeleton } from '../../components/ui';
+import { Button, EmptyState, Icon, LoadError, Skeleton } from '../../components/ui';
 import PartnerCard from '../../components/public/PartnerCard';
 import CategoryIcon from '../../components/public/CategoryIcon';
 import { usePublicCategoriesQuery, usePublicPartnersQuery, usePublicTiersQuery } from '../../app/api';
@@ -17,9 +17,9 @@ export default function PartnersPage() {
   const [page, setPage] = useState(1);
   const debounced = useDebounced(search);
 
-  const { data: categories = [] } = usePublicCategoriesQuery();
+  const { data: categories = [], isLoading: categoriesLoading } = usePublicCategoriesQuery();
   const { data: tiers = [] } = usePublicTiersQuery();
-  const { data, isLoading, isFetching } = usePublicPartnersQuery({ search: debounced, category, page, per_page: 12 });
+  const { data, isLoading, isFetching, isError, refetch } = usePublicPartnersQuery({ search: debounced, category, page, per_page: 12 });
 
   const myTierId = user?.active_membership?.tier?.id;
   const viewTier = tiers.find((x) => String(x.id) === String(viewTierId || myTierId || ''));
@@ -42,16 +42,21 @@ export default function PartnersPage() {
 
       <div className="mt-4 flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap">
         <CategoryChip active={!category} onClick={() => { setCategory(''); setPage(1); }} label={t('common.all')} />
+        {categoriesLoading && [0, 1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-8 w-24 shrink-0 rounded-full" />)}
         {categories.map((c) => (
           <CategoryChip key={c.id} active={String(category) === String(c.id)} onClick={() => { setCategory(c.id); setPage(1); }} label={tr(c.name)} icon={c.icon} count={c.partners_count} />
         ))}
       </div>
 
-      <div className={`mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${isFetching && !isLoading ? 'opacity-60' : ''}`}>
-        {isLoading && Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-lg" />)}
-        {(data?.data || []).map((p) => <PartnerCard key={p.id} partner={p} viewTier={viewTier} />)}
-      </div>
-      {!isLoading && data?.data?.length === 0 && <div className="surface mt-4"><EmptyState icon={Store} title={t('partners.noResults')} /></div>}
+      {isError && !isFetching ? (
+        <LoadError className="mt-8" onRetry={refetch} />
+      ) : (
+        <div className={`mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 ${isFetching && !isLoading ? 'opacity-60' : ''}`}>
+          {isLoading && Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-52 rounded-lg" />)}
+          {(data?.data || []).map((p) => <PartnerCard key={p.id} partner={p} viewTier={viewTier} />)}
+        </div>
+      )}
+      {!isLoading && !isError && data?.data?.length === 0 && <div className="surface mt-4"><EmptyState icon={Store} title={t('partners.noResults')} /></div>}
 
       {data?.meta && data.meta.last_page > 1 && (
         <div className="mt-8 flex items-center justify-center gap-2">

@@ -10,6 +10,7 @@ use App\Models\Setting;
 use App\Models\SmsTemplate;
 use App\Models\User;
 use App\Services\AuditLogger;
+use App\Services\OtpDelivery;
 use App\Services\Sms\SmsService;
 use App\Services\UserService;
 use App\Support\Phone;
@@ -26,6 +27,7 @@ class AuthController extends Controller
         private readonly UserService $users,
         private readonly SmsService $sms,
         private readonly AuditLogger $audit,
+        private readonly OtpDelivery $otp,
     ) {}
 
     public function register(RegisterRequest $request): JsonResponse
@@ -55,7 +57,7 @@ class AuthController extends Controller
             'locale' => $locale,
             'attempts' => 0,
             'sent_at' => now()->timestamp,
-        ], now()->addMinutes(10));
+        ], now()->addMinutes(5));
 
         $template = SmsTemplate::query()->where('event', 'otp')->where('is_active', true)->first();
         $siteName = Setting::get('site.name', config('app.name'));
@@ -63,14 +65,16 @@ class AuthController extends Controller
             ? $template->render($locale, ['otp_code' => $otp, 'site_name' => $siteName])
             : "Your {$siteName} verification code is {$otp}. It expires in 5 minutes.";
 
-        $this->sms->send($normalizedPhone, $message, 'otp', null, null, $locale);
+        $sent = $this->otp->send($normalizedPhone, $request->input('email'), $message, $otp, 'otp', $locale, null, $request->input('name'));
 
         return response()->json([
             'status' => 'otp_sent',
             'phone' => $request->phone,
             'normalized_phone' => $normalizedPhone,
-            'message' => 'Verification code sent to your mobile number.',
-            'expires_in' => 600,
+            'channel' => $sent['channel'],
+            'destination' => $sent['destination'],
+            'message' => $sent['channel'] === 'email' ? 'Verification code sent to your email address.' : 'Verification code sent to your mobile number.',
+            'expires_in' => 300,
             'cooldown' => 60,
         ]);
     }
@@ -104,7 +108,7 @@ class AuthController extends Controller
         $cached['otp'] = $otp;
         $cached['attempts'] = 0;
         $cached['sent_at'] = now()->timestamp;
-        Cache::put($key, $cached, now()->addMinutes(10));
+        Cache::put($key, $cached, now()->addMinutes(5));
 
         $locale = $cached['locale'] ?? 'en';
         $template = SmsTemplate::query()->where('event', 'otp')->where('is_active', true)->first();
@@ -113,12 +117,15 @@ class AuthController extends Controller
             ? $template->render($locale, ['otp_code' => $otp, 'site_name' => $siteName])
             : "Your {$siteName} verification code is {$otp}. It expires in 5 minutes.";
 
-        $this->sms->send($normalizedPhone, $message, 'otp', null, null, $locale);
+        $payload = $cached['payload'] ?? [];
+        $sent = $this->otp->send($normalizedPhone, $payload['email'] ?? null, $message, $otp, 'otp', $locale, null, $payload['name'] ?? null);
 
         return response()->json([
             'status' => 'otp_resent',
             'phone' => $request->phone,
-            'message' => 'A new verification code has been sent to your mobile number.',
+            'channel' => $sent['channel'],
+            'destination' => $sent['destination'],
+            'message' => $sent['channel'] === 'email' ? 'A new verification code has been sent to your email address.' : 'A new verification code has been sent to your mobile number.',
             'cooldown' => 60,
         ]);
     }
@@ -150,7 +157,7 @@ class AuthController extends Controller
         $inputOtp = preg_replace('/\D+/', '', (string) $request->input('otp'));
         if ($inputOtp !== (string) $cached['otp']) {
             $cached['attempts'] = ($cached['attempts'] ?? 0) + 1;
-            Cache::put($key, $cached, now()->addMinutes(10));
+            Cache::put($key, $cached, now()->addMinutes(5));
 
             throw ValidationException::withMessages([
                 'otp' => 'The verification code entered is incorrect.',
@@ -230,7 +237,7 @@ class AuthController extends Controller
             'locale' => $locale,
             'attempts' => 0,
             'sent_at' => now()->timestamp,
-        ], now()->addMinutes(10));
+        ], now()->addMinutes(5));
 
         $template = SmsTemplate::query()->where('event', 'password_reset_otp')->where('is_active', true)->first()
             ?? SmsTemplate::query()->where('event', 'otp')->where('is_active', true)->first();
@@ -244,18 +251,18 @@ class AuthController extends Controller
             ? $template->render($locale, $vars)
             : "Your {$siteName} password reset verification code is {$otp}. It expires in 5 minutes.";
 
-        $this->sms->send($normalizedPhone, $message, 'password_reset_otp', $user, null, $locale);
-
-        $masked = strlen($normalizedPhone) > 7
-            ? substr($normalizedPhone, 0, 4) . '****' . substr($normalizedPhone, -3)
-            : $normalizedPhone;
+        $sent = $this->otp->send($normalizedPhone, $user->email, $message, $otp, 'password_reset_otp', $locale, $user, $user->name);
 
         return response()->json([
             'status' => 'otp_sent',
             'phone' => $normalizedPhone,
-            'masked_phone' => $masked,
-            'message' => 'Password reset verification code sent to your registered mobile number.',
-            'expires_in' => 600,
+            'masked_phone' => OtpDelivery::maskPhone($normalizedPhone),
+            'channel' => $sent['channel'],
+            'destination' => $sent['destination'],
+            'message' => $sent['channel'] === 'email'
+                ? 'Password reset verification code sent to your registered email address.'
+                : 'Password reset verification code sent to your registered mobile number.',
+            'expires_in' => 300,
             'cooldown' => 60,
         ]);
     }
@@ -294,7 +301,7 @@ class AuthController extends Controller
         $cached['otp'] = $otp;
         $cached['attempts'] = 0;
         $cached['sent_at'] = now()->timestamp;
-        Cache::put($key, $cached, now()->addMinutes(10));
+        Cache::put($key, $cached, now()->addMinutes(5));
 
         $locale = $cached['locale'] ?? 'en';
         $template = SmsTemplate::query()->where('event', 'password_reset_otp')->where('is_active', true)->first()
@@ -309,12 +316,14 @@ class AuthController extends Controller
             ? $template->render($locale, $vars)
             : "Your {$siteName} password reset verification code is {$otp}. It expires in 5 minutes.";
 
-        $this->sms->send($normalizedPhone, $message, 'password_reset_otp', $user, null, $locale);
+        $sent = $this->otp->send($normalizedPhone, $user->email, $message, $otp, 'password_reset_otp', $locale, $user, $user->name);
 
         return response()->json([
             'status' => 'otp_resent',
             'phone' => $normalizedPhone,
-            'message' => 'A new verification code has been sent to your mobile number.',
+            'channel' => $sent['channel'],
+            'destination' => $sent['destination'],
+            'message' => $sent['channel'] === 'email' ? 'A new verification code has been sent to your email address.' : 'A new verification code has been sent to your mobile number.',
             'cooldown' => 60,
         ]);
     }
@@ -347,7 +356,7 @@ class AuthController extends Controller
         $inputOtp = preg_replace('/\D+/', '', (string) $request->input('otp'));
         if ($inputOtp !== (string) $cached['otp']) {
             $cached['attempts'] = ($cached['attempts'] ?? 0) + 1;
-            Cache::put($key, $cached, now()->addMinutes(10));
+            Cache::put($key, $cached, now()->addMinutes(5));
 
             throw ValidationException::withMessages([
                 'otp' => 'The verification code entered is incorrect.',

@@ -48,7 +48,6 @@ function getNotificationIcon(type) {
 export default function NotificationBell() {
   const [isOpen, setIsOpen] = useState(false);
   const [toastNotification, setToastNotification] = useState(null);
-  const [isLive, setIsLive] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -75,16 +74,6 @@ export default function NotificationBell() {
     const echo = getEcho(token);
     if (!echo) return;
 
-    // Check initial socket state
-    if (echo.connector?.pusher?.connection?.state === 'connected') {
-      setIsLive(true);
-    }
-
-    const stateHandler = (states) => {
-      setIsLive(states.current === 'connected');
-    };
-    echo.connector?.pusher?.connection?.bind('state_change', stateHandler);
-
     const userChannel = echo.private(`App.Models.User.${user.id}`);
 
     const handleNewNotification = (notification) => {
@@ -108,7 +97,6 @@ export default function NotificationBell() {
 
     return () => {
       try {
-        echo.connector?.pusher?.connection?.unbind('state_change', stateHandler);
         userChannel.stopListening('.portal.notification');
         echo.leave(`App.Models.User.${user.id}`);
       } catch {
@@ -173,7 +161,7 @@ export default function NotificationBell() {
             if (toastNotification.link) navigate(toastNotification.link);
             setToastNotification(null);
           }}
-          className="fixed top-4 right-4 z-50 flex max-w-sm cursor-pointer items-start gap-3 rounded-xl border border-gold-200/50 bg-white p-3.5 shadow-xl transition-all duration-300 hover:shadow-2xl animate-fade-in"
+          className="fixed top-4 right-4 z-50 flex max-w-sm cursor-pointer items-start gap-3 rounded-lg border border-slate-200 bg-white p-3.5 shadow-[0_8px_24px_-12px_rgb(15_23_42/0.25)] animate-fade-in"
         >
           {getNotificationIcon(toastNotification.type)}
           <div className="min-w-0 flex-1">
@@ -209,16 +197,15 @@ export default function NotificationBell() {
       >
         <Bell className="h-5 w-5" />
         {unreadCount > 0 && (
-          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+          <span className="absolute -top-1 -right-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-rose-500 px-1 text-[10px] font-bold text-white ring-2 ring-white">
             {unreadCount > 99 ? '99+' : unreadCount}
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-400 opacity-40"></span>
           </span>
         )}
       </button>
 
       {/* Dropdown Popover */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl border border-slate-200/80 bg-white shadow-2xl z-50 overflow-hidden animate-fade-in">
+        <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-lg border border-slate-200 bg-white shadow-[0_12px_32px_-12px_rgb(15_23_42/0.25)] z-50 overflow-hidden animate-fade-in">
           {/* Header */}
           <div className="flex items-center justify-between border-b border-slate-100 bg-slate-50/70 px-4 py-3">
             <div className="flex items-center gap-2">
@@ -249,7 +236,7 @@ export default function NotificationBell() {
                   <Bell className="h-6 w-6" />
                 </div>
                 <p className="text-sm font-medium text-slate-700">No notifications yet</p>
-                <p className="text-2xs text-slate-400 mt-0.5">We will notify you when something important arrives.</p>
+                <p className="text-2xs text-slate-400 mt-0.5">Updates about your card and payments will show up here.</p>
               </div>
             ) : (
               notifications.map((n) => {
@@ -280,7 +267,7 @@ export default function NotificationBell() {
                     {/* Unread indicator & Delete action */}
                     <div className="flex flex-col items-center gap-1 pt-0.5">
                       {isUnread && (
-                        <span className="h-2 w-2 rounded-full bg-gold-500 shadow-sm" title="Unread" />
+                        <span className="h-2 w-2 rounded-full bg-gold-500" title="Unread" />
                       )}
                       <button
                         onClick={(e) => handleDelete(e, n.id)}
@@ -297,18 +284,6 @@ export default function NotificationBell() {
             )}
           </div>
 
-          {/* Footer with Reverb Live Status */}
-          <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-4 py-2 text-2xs text-slate-400">
-            <div className="flex items-center gap-1.5">
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  isLive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
-                }`}
-              />
-              <span>{isLive ? 'Reverb Realtime Connected' : 'Auto-Sync Active'}</span>
-            </div>
-            <span>{notifications.length} total</span>
-          </div>
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { BadgeCheck, ShieldAlert, ShieldX } from 'lucide-react';
-import { Icon, Spinner, TierBadge } from '../../components/ui';
+import { Icon, LoadError, Spinner, TierBadge } from '../../components/ui';
 import { useVerifyCardQuery } from '../../app/api';
 import { useDocumentTitle, useT } from '../../hooks';
 import { date, dateTime } from '../../lib/format';
@@ -10,11 +10,15 @@ export default function VerifyPage() {
   const { token } = useParams();
   const { t, tr, locale } = useT();
   useDocumentTitle(t('verify.title'));
-  const { data, isLoading, error } = useVerifyCardQuery(token);
+  const { data, isLoading, error, refetch } = useVerifyCardQuery(token);
 
   const member = data?.member;
   const valid = data?.valid;
-  const state = error ? 'notFound' : valid ? 'valid' : member?.status === 'expired' ? 'expired' : 'invalid';
+  // Only a real "not found" from the server means the card is unknown. A network/server failure must never
+  // read as "Card not recognised" — a cashier would turn away a valid member.
+  const notFound = error?.status === 404;
+  const unreachable = error && !notFound;
+  const state = notFound ? 'notFound' : valid ? 'valid' : member?.status === 'expired' ? 'expired' : 'invalid';
   const tone = {
     valid: ['border-emerald-200 bg-emerald-50', 'text-emerald-700', BadgeCheck],
     expired: ['border-amber-200 bg-amber-50', 'text-amber-700', ShieldAlert],
@@ -27,6 +31,8 @@ export default function VerifyPage() {
       <p className="eyebrow">{t('verify.title')}</p>
       {isLoading ? (
         <div className="surface mt-4 flex justify-center p-10"><Spinner /></div>
+      ) : unreachable ? (
+        <LoadError className="mt-4" title={t('verify.unreachable')} description={t('verify.unreachableBody')} onRetry={refetch} />
       ) : (
         <div className="surface mt-4 overflow-hidden">
           <div className={`flex items-center gap-3 border-b px-5 py-4 ${tone[0]}`}>

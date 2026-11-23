@@ -11,7 +11,9 @@ class GatewaySeeder extends Seeder
     public function run(): void
     {
         $payments = [
-            ['manual', 'Bank Transfer', ['en' => 'Bank transfer / slip upload', 'si' => 'බැංකු මාරු කිරීම / ලිපිය උඩුගත කිරීම', 'ta' => 'வங்கி பரிமாற்றம் / சீட்டு பதிவேற்றம்'], true, true, 1, [], [
+            // Onepay is the primary gateway; it stays inactive until real credentials are entered in admin.
+            ['onepay', 'Onepay', ['en' => 'Card / LANKAQR via Onepay', 'si' => 'Onepay හරහා කාඩ්පත් / LANKAQR', 'ta' => 'Onepay மூலம் அட்டை / LANKAQR'], false, true, 0, ['app_id' => '', 'app_token' => '', 'hash_salt' => ''], []],
+            ['manual', 'Bank Transfer', ['en' => 'Bank transfer / slip upload', 'si' => 'බැංකු මාරු කිරීම / ලිපිය උඩුගත කිරීම', 'ta' => 'வங்கி பரிமாற்றம் / சீட்டு பதிவேற்றம்'], true, false, 1, [], [
                 // Placeholders — replace with the real account in Admin › Settings › Payment Gateways.
                 'bank_name' => '(Set bank name in admin)',
                 'account_name' => 'Jeewanasaviya',

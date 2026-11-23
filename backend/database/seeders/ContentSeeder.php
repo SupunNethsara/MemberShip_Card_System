@@ -34,23 +34,6 @@ class ContentSeeder extends Seeder
                 'si' => 'ආරක්ෂාව • ඉතුරුම් • වටිනා ජීවන රටාව',
                 'ta' => 'பாதுகாப்பு • சேமிப்பு • மதிப்புமிக்க வாழ்க்கை முறை',
             ]],
-            ['hero.eyebrow', 'hero', 'Hero eyebrow', 'text', [
-                'en' => 'Protection • Savings • A Valuable Lifestyle',
-                'si' => 'ආරක්ෂාව • ඉතුරුම් • වටිනා ජීවන රටාව',
-                'ta' => 'பாதுகாப்பு • சேமிப்பு • மதிப்புமிக்க வாழ்க்கை முறை',
-            ]],
-            ['hero.title', 'hero', 'Hero headline', 'text', [
-                'en' => 'One card for your family’s protection and everyday savings.',
-                'si' => 'ඔබේ පවුලේ ආරක්ෂාවට සහ දෛනික ඉතුරුම්වලට එකම කාඩ්පතක්.',
-                'ta' => 'உங்கள் குடும்பத்தின் பாதுகாப்புக்கும் அன்றாட சேமிப்புக்கும் ஒரே அட்டை.',
-            ]],
-            ['hero.subtitle', 'hero', 'Hero sub-headline', 'textarea', [
-                'en' => 'Jeewanasaviya members save on healthcare, medical services, groceries, fuel and everyday essentials at trusted partners across Sri Lanka — verified instantly with a QR code on your phone.',
-                'si' => 'ජීවනසවිය සාමාජිකයින්ට ශ්‍රී ලංකාව පුරා විශ්වාසනීය හවුල්කරුවන් වෙතින් සෞඛ්‍ය, වෛද්‍ය සේවා, සිල්ලර බඩු, ඉන්ධන සහ දෛනික අවශ්‍යතා සඳහා ඉතුරුම් — ඔබගේ දුරකථනයේ QR කේතයෙන් ක්ෂණිකව තහවුරු කෙරේ.',
-                'ta' => 'ஜீவனசவிய உறுப்பினர்கள் இலங்கை முழுவதும் நம்பகமான கூட்டாளர்களிடம் சுகாதாரம், மருத்துவ சேவைகள், மளிகை, எரிபொருள் மற்றும் அன்றாடத் தேவைகளில் சேமிக்கிறார்கள் — உங்கள் தொலைபேசியில் QR குறியீட்டால் உடனடியாக சரிபார்க்கப்படும்.',
-            ]],
-            ['hero.cta_primary', 'hero', 'Primary button', 'text', ['en' => 'Become a member', 'si' => 'සාමාජිකයෙකු වන්න', 'ta' => 'உறுப்பினராகுங்கள்']],
-            ['hero.cta_secondary', 'hero', 'Secondary button', 'text', ['en' => 'Browse partners', 'si' => 'හවුල්කරුවන් බලන්න', 'ta' => 'கூட்டாளர்களைப் பாருங்கள்']],
             ['how.title', 'how', 'How it works — title', 'text', ['en' => 'How it works', 'si' => 'එය ක්‍රියා කරන ආකාරය', 'ta' => 'இது எப்படி செயல்படுகிறது']],
             ['how.step1', 'how', 'Step 1', 'text', ['en' => 'Choose a tier that fits how you spend.', 'si' => 'ඔබේ වියදම් රටාවට ගැළපෙන මට්ටමක් තෝරන්න.', 'ta' => 'உங்கள் செலவுக்கு ஏற்ற நிலையைத் தேர்ந்தெடுக்கவும்.']],
             ['how.step2', 'how', 'Step 2', 'text', ['en' => 'Pay securely online — your card activates instantly.', 'si' => 'මාර්ගගතව ආරක්ෂිතව ගෙවන්න — ඔබේ කාඩ්පත ක්ෂණිකව සක්‍රිය වේ.', 'ta' => 'பாதுகாப்பாக ஆன்லைனில் செலுத்துங்கள் — உங்கள் அட்டை உடனடியாக செயல்படும்.']],

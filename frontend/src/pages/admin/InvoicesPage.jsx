@@ -15,8 +15,8 @@ export default function InvoicesPage() {
   const [tab, setTab] = useState('invoices');
   const [params, update, raw] = useTableState({ status: search.get('status') || undefined });
   const [txParams, txUpdate, txRaw] = useTableState();
-  const { data, isLoading, isFetching } = useInvoicesQuery(params);
-  const { data: tx, isLoading: txLoading, isFetching: txFetching } = useTransactionsQuery(txParams, { skip: tab !== 'transactions' });
+  const { data, isLoading, isFetching, refetch } = useInvoicesQuery(params);
+  const { data: tx, isLoading: txLoading, isFetching: txFetching, refetch: refetchTx } = useTransactionsQuery(txParams, { skip: tab !== 'transactions' });
   const { data: gateways } = usePaymentGatewaysQuery(undefined, { skip: !can('gateways.payment.view|gateways.payment.manage') });
   const [selected, setSelected] = useState(null);
   const summary = data?.summary;
@@ -54,6 +54,7 @@ export default function InvoicesPage() {
         <DataTable
           columns={columns}
           data={data}
+          onRetry={refetch}
           loading={isLoading}
           fetching={isFetching}
           state={raw}
@@ -70,6 +71,7 @@ export default function InvoicesPage() {
         <DataTable
           columns={txColumns}
           data={tx}
+          onRetry={refetchTx}
           loading={txLoading}
           fetching={txFetching}
           state={txRaw}

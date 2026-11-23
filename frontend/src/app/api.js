@@ -29,6 +29,7 @@ export const api = baseApi.injectEndpoints({
     publicPartners: b.query({ query: (p) => `/public/partners${qs(p)}`, providesTags: ['Partner', 'Offer'] }),
     publicGateways: b.query({ query: () => '/public/gateways', providesTags: ['PaymentGateway'], transformResponse: (r) => r.data }),
     verifyCard: b.query({ query: (token) => `/public/verify/${token}` }),
+    submitContactInquiry: b.mutation({ query: (body) => ({ url: '/public/contact', method: 'POST', body }) }),
 
     // ── Member portal ─────────────────────────────────────
     memberDashboard: b.query({ query: () => '/member/dashboard', providesTags: ['MemberArea'] }),
@@ -147,6 +148,16 @@ export const api = baseApi.injectEndpoints({
     }),
     smsLogs: b.query({ query: (p) => `/admin/sms-logs${qs(p)}`, providesTags: ['SmsLog'] }),
 
+    // ── Admin: contact inquiries ──────────────────────────
+    inquiries: b.query({ query: (p) => `/admin/inquiries${qs(p)}`, providesTags: ['Inquiry'] }),
+    inquiriesNewCount: b.query({ query: () => '/admin/inquiries/new-count', providesTags: ['Inquiry'] }),
+    inquiry: b.query({ query: (id) => `/admin/inquiries/${id}`, providesTags: (r, e, id) => [{ type: 'Inquiry', id }], transformResponse: (r) => r.data }),
+    updateInquiry: b.mutation({
+      query: ({ id, ...body }) => ({ url: `/admin/inquiries/${id}`, method: 'PUT', body }),
+      invalidatesTags: (r, e, { id }) => ['Inquiry', { type: 'Inquiry', id }],
+    }),
+    deleteInquiry: b.mutation({ query: (id) => ({ url: `/admin/inquiries/${id}`, method: 'DELETE' }), invalidatesTags: ['Inquiry'] }),
+
     // ── Admin: CMS ────────────────────────────────────────
     cms: b.query({ query: () => '/admin/cms', providesTags: ['Content', 'Settings'] }),
     saveCms: b.mutation({ query: (body) => ({ url: '/admin/cms', method: 'PUT', body }), invalidatesTags: ['Content', 'Settings', 'Audit'] }),
@@ -209,7 +220,7 @@ export const {
   useLoginMutation, useRegisterMutation, useSendRegisterOtpMutation, useResendRegisterOtpMutation, useVerifyRegisterOtpMutation,
   useSendForgotPasswordOtpMutation, useResendForgotPasswordOtpMutation, useResetPasswordWithOtpMutation,
   useMeQuery, useLogoutApiMutation, useUpdateProfileMutation,
-  usePublicContentQuery, usePublicTiersQuery, usePublicCategoriesQuery, usePublicPartnersQuery, usePublicGatewaysQuery, useVerifyCardQuery,
+  usePublicContentQuery, usePublicTiersQuery, usePublicCategoriesQuery, usePublicPartnersQuery, usePublicGatewaysQuery, useVerifyCardQuery, useSubmitContactInquiryMutation,
   useMemberDashboardQuery, useMemberBenefitsQuery, useMemberInvoicesQuery, useMemberInvoiceQuery, useCheckoutMutation, useUploadSlipMutation,
   useAdminDashboardQuery, useAuditLogsQuery,
   useMemberCardsQuery, useMemberCardLogsQuery, useCardSheetMutation, useMarkCardsPrintedMutation, useMarkCardsIssuedMutation,
@@ -221,6 +232,7 @@ export const {
   usePaymentGatewaysQuery, useSavePaymentGatewayMutation, useDeletePaymentGatewayMutation,
   useSmsGatewaysQuery, useSaveSmsGatewayMutation, useDeleteSmsGatewayMutation, useTestSmsMutation, useSetSmsServiceMutation,
   useSmsTemplatesQuery, useSaveSmsTemplateMutation, useSmsLogsQuery,
+  useInquiriesQuery, useInquiriesNewCountQuery, useInquiryQuery, useUpdateInquiryMutation, useDeleteInquiryMutation,
   useCmsQuery, useSaveCmsMutation, useUploadBrandLogoMutation, useHeroSlidesQuery, useSaveHeroSlideMutation, useDeleteHeroSlideMutation, useFaqsQuery, useSaveFaqMutation, useDeleteFaqMutation,
   useRolesQuery, useSavePermissionMatrixMutation, useSaveRoleMutation, useDeleteRoleMutation,
   useStaffQuery, useSaveStaffMutation, useDeleteStaffMutation,

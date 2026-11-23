@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, Building2, CalendarClock, MessageSquare, Users, Wallet } from 'lucide-react';
-import { Alert, Button, Card, PageHeader, Skeleton, StatCard, TierBadge } from '../../components/ui';
+import { Alert, Button, Card, LoadError, PageHeader, Skeleton, StatCard, TierBadge } from '../../components/ui';
 import { BarChart, DistributionBars, LineChart } from '../../components/charts/Charts';
 import { useAdminDashboardQuery } from '../../app/api';
 import { useCurrentUser, useDocumentTitle } from '../../hooks';
@@ -9,9 +9,19 @@ import { compactMoney, money, number, relative } from '../../lib/format';
 export default function DashboardPage() {
   useDocumentTitle('Dashboard');
   const user = useCurrentUser();
-  const { data, isLoading } = useAdminDashboardQuery(undefined, { pollingInterval: 60000 });
+  const { data, isLoading, isError, refetch } = useAdminDashboardQuery(undefined, { pollingInterval: 60000 });
   const k = data?.kpis || {};
   const series = data?.revenue_series || [];
+
+  // Without this, a failed load would show a dashboard of zeros that looks like real numbers.
+  if (isError && !data) {
+    return (
+      <div className="space-y-6">
+        <PageHeader title={`Good ${greeting()}, ${user?.name?.split(' ')[0] ?? ''}`} />
+        <LoadError onRetry={refetch} />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

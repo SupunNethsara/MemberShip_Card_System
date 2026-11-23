@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { GripVertical, Layers, Pencil, Plus, Star, Trash2, X } from 'lucide-react';
 import {
-  Alert, Button, Can, ConfirmDialog, EmptyState, Icon, Input, MultilingualInput, PageHeader, Select, Skeleton,
+  Alert, Button, Can, ConfirmDialog, EmptyState, Icon, Input, LoadError, MultilingualInput, PageHeader, Select, Skeleton,
   SlideOverDrawer, StatusBadge, Toggle,
 } from '../../components/ui';
 import { useDeleteTierMutation, useSaveTierMutation, useTiersQuery } from '../../app/api';
@@ -13,7 +13,7 @@ const SWATCHES = ['#64748b', '#c99227', '#13224a', '#b45309', '#0e7490', '#04785
 export default function TiersPage() {
   useDocumentTitle('Membership Tiers');
   const can = usePermission();
-  const { data, isLoading } = useTiersQuery({ per_page: 100, sort: 'priority', direction: 'asc' });
+  const { data, isLoading, refetch } = useTiersQuery({ per_page: 100, sort: 'priority', direction: 'asc' });
   const [editing, setEditing] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const [remove, { isLoading: removing }] = useDeleteTierMutation();
@@ -68,7 +68,8 @@ export default function TiersPage() {
           </div>
         ))}
       </div>
-      {!isLoading && tiers.length === 0 && <div className="surface"><EmptyState icon={Layers} title="No tiers yet" description="Create your first membership tier to start selling." /></div>}
+      {!isLoading && !data && <LoadError onRetry={refetch} />}
+      {!isLoading && data && tiers.length === 0 && <div className="surface"><EmptyState icon={Layers} title="No tiers yet" description="Create your first membership tier to start selling." /></div>}
 
       <TierDrawer tier={editing} onClose={() => setEditing(null)} />
       <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} onConfirm={doDelete} loading={removing} title="Delete tier?" description={`"${tr(deleting?.name)}" will be removed. Tiers with existing memberships can't be deleted — deactivate them instead.`} confirmLabel="Delete tier" />

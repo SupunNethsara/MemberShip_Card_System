@@ -10,8 +10,8 @@ class EnsureActiveAccount
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->user()?->status === 'suspended') {
-            $request->user()->currentAccessToken()?->delete();
+        if ($request->user() && $request->user()->status !== 'active') {
+            $request->user()->tokens()->delete();
             abort(401, 'Account suspended.');
         }
 

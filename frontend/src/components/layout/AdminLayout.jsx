@@ -2,14 +2,14 @@ import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import {
-  BadgePercent, Building2, CreditCard, IdCard, ExternalLink, FileClock, FileText, Gauge, KeyRound, Layers, LogOut, Menu,
+  BadgePercent, Building2, CreditCard, IdCard, ExternalLink, Inbox, FileClock, FileText, Gauge, KeyRound, Layers, LogOut, Menu,
   MessageSquareText, MessagesSquare, Receipt, ScrollText, ShieldCheck, Smartphone, UserCog, Users, X,
 } from 'lucide-react';
 import { Avatar, Icon, PageLoader } from '../ui';
 import NotificationBell from './NotificationBell';
 import { FullLogo, useSignOut } from './PublicLayout';
 import { usePermission } from '../../hooks';
-import { usePendingApprovalsQuery, usePublicContentQuery } from '../../app/api';
+import { useInquiriesNewCountQuery, usePendingApprovalsQuery, usePublicContentQuery } from '../../app/api';
 
 const NAV = [
   { section: 'Overview', items: [{ to: '/admin', label: 'Dashboard', icon: Gauge, perm: 'dashboard.view', end: true }] },
@@ -32,6 +32,7 @@ const NAV = [
   {
     section: 'Communication',
     items: [
+      { to: '/admin/inquiries', label: 'Contact Inquiries', icon: Inbox, perm: 'inquiries.view', badge: 'inquiries' },
       { to: '/admin/sms-templates', label: 'SMS Templates', icon: MessageSquareText, perm: 'sms.templates.manage|gateways.sms.view' },
       { to: '/admin/sms-logs', label: 'SMS Delivery Logs', icon: MessagesSquare, perm: 'sms.logs.view' },
       { to: '/admin/cms', label: 'CMS & Localization', icon: FileText, perm: 'cms.view' },
@@ -55,6 +56,7 @@ function Sidebar({ onNavigate }) {
   const signOut = useSignOut();
   const { data: content } = usePublicContentQuery();
   const { data: pending } = usePendingApprovalsQuery(undefined, { skip: !can('payments.view'), pollingInterval: 60000 });
+  const { data: newInquiries } = useInquiriesNewCountQuery(undefined, { skip: !can('inquiries.view'), pollingInterval: 60000 });
 
   return (
     <div className="flex h-full flex-col">
@@ -86,6 +88,9 @@ function Sidebar({ onNavigate }) {
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge === 'approvals' && pending?.count > 0 && (
                         <span className="rounded-full bg-gold-400 px-1.5 text-navy-950 text-2xs font-semibold tabular-nums text-white">{pending.count}</span>
+                      )}
+                      {item.badge === 'inquiries' && newInquiries?.count > 0 && (
+                        <span className="rounded-full bg-gold-400 px-1.5 text-2xs font-semibold tabular-nums text-navy-950">{newInquiries.count}</span>
                       )}
                     </NavLink>
                   </li>
@@ -140,10 +145,7 @@ export default function AdminLayout() {
       <div className="lg:pl-60">
         {/* Desktop top header */}
         <header className="sticky top-0 z-20 hidden h-14 items-center justify-between border-b border-slate-200 bg-white/90 px-8 backdrop-blur lg:flex">
-          <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-            <span className="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span>Live Workspace</span>
-          </div>
+          <span aria-hidden="true" />
           <div className="flex items-center gap-3">
             <NotificationBell />
           </div>

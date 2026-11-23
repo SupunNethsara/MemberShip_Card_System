@@ -17,7 +17,7 @@ export default function PartnersPage() {
   useDocumentTitle('Partner Businesses');
   const can = usePermission();
   const [params, update, raw] = useTableState();
-  const { data, isLoading, isFetching } = usePartnersQuery(params);
+  const { data, isLoading, isFetching, refetch } = usePartnersQuery(params);
   const { data: cats } = useCategoriesQuery();
   const [editingId, setEditingId] = useState(null); // number | 'new' | null
   const [catsOpen, setCatsOpen] = useState(false);
@@ -59,6 +59,7 @@ export default function PartnersPage() {
       <DataTable
         columns={columns}
         data={data}
+        onRetry={refetch}
         loading={isLoading}
         fetching={isFetching}
         state={raw}

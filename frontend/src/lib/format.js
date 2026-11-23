@@ -66,7 +66,7 @@ export const offerValue = (offer, t) => {
 /** Extracts a human message from an RTK Query error. */
 export const errorMessage = (err, fallback = 'Something went wrong. Please try again.') => {
   if (!err) return fallback;
-  if (err.status === 'FETCH_ERROR') return 'Cannot reach the server. Is the API running?';
+  if (err.status === 'FETCH_ERROR' || err.status === 'TIMEOUT_ERROR') return "We couldn't reach the server. Please check your connection and try again.";
   const d = err.data;
   if (d?.errors) return Object.values(d.errors).flat()[0] || d.message || fallback;
   return d?.message || fallback;

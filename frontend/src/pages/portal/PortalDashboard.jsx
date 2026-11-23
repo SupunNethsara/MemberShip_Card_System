@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpCircle, Gift, Printer, Receipt, RefreshCw, Sparkles } from 'lucide-react';
-import { Alert, Button, Card, Icon, Skeleton, StatusBadge, TierBadge } from '../../components/ui';
+import { ArrowRight, ArrowUpCircle, CreditCard, Gift, Printer, Receipt, RefreshCw } from 'lucide-react';
+import { Alert, Button, Card, Icon, LoadError, Skeleton, StatusBadge, TierBadge } from '../../components/ui';
 import MembershipCard from '../../components/MembershipCard';
 import PrintableCard from '../../components/PrintableCard';
+import { ensureCardArt } from '../../components/card/ArtworkCardFront';
 import { useMemberDashboardQuery, usePublicContentQuery, usePublicTiersQuery } from '../../app/api';
 import { useDocumentTitle, useT } from '../../hooks';
 import { date } from '../../lib/format';
@@ -10,18 +11,33 @@ import { date } from '../../lib/format';
 export default function PortalDashboard() {
   const { t, tr, locale } = useT();
   useDocumentTitle(t('portal.nav.card'));
-  const { data, isLoading } = useMemberDashboardQuery();
+  const { data, isLoading, isError, refetch } = useMemberDashboardQuery();
   const { data: content } = usePublicContentQuery();
   const { data: tiers = [] } = usePublicTiersQuery();
 
   if (isLoading) {
     return (
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-        <Skeleton className="h-64 rounded-2xl" />
-        <Skeleton className="h-64 rounded-lg" />
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <Skeleton className="h-4 w-24" />
+          <Skeleton className="h-7 w-48" />
+        </div>
+        <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+          <Skeleton className="aspect-[1.586] w-full rounded-xl" />
+          <div className="space-y-4">
+            <Skeleton className="h-44 rounded-lg" />
+            <div className="grid grid-cols-2 gap-3">
+              <Skeleton className="h-24 rounded-lg" />
+              <Skeleton className="h-24 rounded-lg" />
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
+
+  // Never fall through to "Activate your membership" when the data simply didn't arrive.
+  if (isError && !data) return <LoadError onRetry={refetch} />;
 
   const m = data?.membership;
   const card = data?.card;
@@ -48,6 +64,7 @@ export default function PortalDashboard() {
             <MembershipCard
               name={card?.name}
               memberCode={card?.member_code}
+              tierSlug={m?.tier?.slug}
               tierName={m ? tr(m.tier?.name) : '—'}
               tierColor={m?.tier?.color}
               expiresAt={m?.expires_at}
@@ -61,10 +78,11 @@ export default function PortalDashboard() {
             />
           </div>
           <p className="text-center text-xs text-slate-500">{t('portal.scanHint')}</p>
-          <Button variant="secondary" size="sm" icon={Printer} onClick={() => window.print()} disabled={!card?.member_code}>{t('portal.print')}</Button>
+          <Button variant="secondary" size="sm" icon={Printer} onClick={() => ensureCardArt().then(() => window.print())} disabled={!card?.member_code}>{t('portal.print')}</Button>
           <PrintableCard
             name={card?.name}
             memberCode={card?.member_code}
+            tierSlug={m?.tier?.slug}
             tierName={m ? tr(m.tier?.name) : ''}
             tierColor={m?.tier?.color}
             expiresAt={m?.expires_at}
@@ -100,7 +118,7 @@ export default function PortalDashboard() {
             </Card>
           ) : (
             <Card bodyClass="p-5">
-              <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-navy-900 text-white"><Icon icon={Sparkles} size={17} /></span>
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-md bg-navy-900 text-white"><Icon icon={CreditCard} size={17} /></span>
               <h2 className="mt-4 text-base font-semibold">{t('portal.noPlanTitle')}</h2>
               <p className="mt-1 text-sm text-slate-600">{t('portal.noPlanSub')}</p>
               <Link to="/portal/checkout"><Button className="mt-5 w-full justify-center" iconRight={ArrowRight}>{t('portal.choosePlan')}</Button></Link>

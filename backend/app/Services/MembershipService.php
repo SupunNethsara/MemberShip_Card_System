@@ -20,12 +20,12 @@ class MembershipService
         private readonly MemberCardService $cards,
     ) {}
 
-    /** Assigns a permanent member ID (MEM-2026-00042) and QR card token if missing. */
+    /** Assigns a permanent member ID (JHMS 1251 3428) and QR card token if missing. */
     public function ensureMemberIdentity(User $user): User
     {
         $dirty = false;
         if (! $user->member_code) {
-            $user->member_code = sprintf('%s-%s-%05d', config('portal.member_code_prefix'), $user->created_at?->format('Y') ?? now()->format('Y'), $user->id);
+            $user->member_code = self::newMemberCode();
             $dirty = true;
         }
         if (! $user->card_token) {
@@ -37,6 +37,30 @@ class MembershipService
         }
 
         return $user;
+    }
+
+    /**
+     * A fresh, unused member ID in the card's printed format: prefix + 8 digits in two groups of four
+     * ("JHMS 1251 3428"). Digits are random (not a running count) so IDs don't reveal how many members
+     * there are or let anyone guess a neighbour's ID. Stored with the spaces, exactly as printed.
+     */
+    public static function newMemberCode(): string
+    {
+        $prefix = strtoupper(trim((string) config('portal.member_code_prefix', 'JHMS')));
+        do {
+            $digits = (string) random_int(10_000_000, 99_999_999);
+            $code = sprintf('%s %s %s', $prefix, substr($digits, 0, 4), substr($digits, 4));
+        } while (User::query()->where('member_code', $code)->exists());
+
+        return $code;
+    }
+
+    /** True when a code already follows the current printed format. */
+    public static function isCurrentMemberCode(?string $code): bool
+    {
+        $prefix = preg_quote(strtoupper(trim((string) config('portal.member_code_prefix', 'JHMS'))), '/');
+
+        return (bool) preg_match("/^{$prefix} \\d{4} \\d{4}$/", (string) $code);
     }
 
     /** Determines whether a purchase of $tier is new, a renewal, or an upgrade for this user. */

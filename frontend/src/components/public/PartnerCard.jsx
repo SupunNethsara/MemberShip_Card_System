@@ -1,75 +1,76 @@
-import { Lock, MapPin, Navigation, Unlock } from 'lucide-react';
-import { Icon, TierBadge } from '../ui';
+import { Check, MapPin } from 'lucide-react';
+import { Icon } from '../ui';
 import { useT } from '../../hooks';
 import { offerValue } from '../../lib/format';
 import CategoryIcon from './CategoryIcon';
 
+const MAX_OFFERS = 3;
+
 /**
- * Partner with its live offers. When `viewTier` is set (a tier object), each offer shows
- * an Unlocked / Locked badge for that tier; otherwise it lists the tiers that unlock it.
+ * A partner business and its live offers.
+ * With `viewTier` (a tier object) each offer reads as included or "from <lowest tier that unlocks it>";
+ * without it, each offer simply names the lowest tier that unlocks it.
  */
 export default function PartnerCard({ partner, viewTier }) {
   const { t, tr } = useT();
   const offers = partner.offers || [];
+  const shown = offers.slice(0, MAX_OFFERS);
+  const more = offers.length - shown.length;
 
   return (
-    <article className="surface flex flex-col overflow-hidden transition-colors hover:border-slate-300">
-      <div className="flex items-start gap-3 border-b border-slate-100 p-4">
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-slate-50">
+    <article className="flex flex-col rounded-xl border border-slate-200 bg-white p-5 transition-colors hover:border-navy-200">
+      <header className="flex items-center gap-3.5">
+        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-slate-100 bg-navy-50">
           {partner.logo_url ? (
-            <img src={partner.logo_url} alt="" className="h-full w-full object-cover" />
+            <img src={partner.logo_url} alt="" className="h-full w-full object-cover" loading="lazy" />
           ) : (
-            <CategoryIcon name={partner.category?.icon} size={18} className="text-slate-500" />
+            <CategoryIcon name={partner.category?.icon} size={22} className="text-navy-700" />
           )}
         </div>
-        <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-navy-900">{tr(partner.name)}</h3>
-          <p className="mt-0.5 flex items-center gap-1 text-xs text-slate-500">
-            <span>{tr(partner.category?.name)}</span>
-            {partner.city && (
-              <>
-                <span className="text-slate-300">·</span>
-                <Icon icon={MapPin} size={11} />
-                <span>{partner.city}</span>
-              </>
-            )}
+        <div className="min-w-0">
+          <h3 className="truncate text-base font-semibold text-navy-900">{tr(partner.name)}</h3>
+          <p className="mt-0.5 truncate text-[13px] text-slate-500">
+            {tr(partner.category?.name)}
+            {partner.city && <> · {partner.city}</>}
           </p>
         </div>
-        {partner.google_maps_url && (
-          <a href={partner.google_maps_url} target="_blank" rel="noreferrer" className="rounded-md p-1.5 text-slate-400 hover:bg-slate-100 hover:text-navy-900" title={t('partners.directions')}>
-            <Icon icon={Navigation} size={14} />
-          </a>
-        )}
-      </div>
+      </header>
 
-      <ul className="flex-1 divide-y divide-slate-100">
-        {offers.map((offer) => {
-          const unlocked = viewTier ? offer.tier_ids?.includes(viewTier.id) : null;
-          const minTier = [...(offer.tiers || [])].sort((a, b) => a.priority - b.priority)[0];
+      <ul className="mt-4 flex-1 space-y-2">
+        {shown.map((offer) => {
+          const lowest = [...(offer.tiers || [])].sort((a, b) => a.priority - b.priority)[0];
+          const included = viewTier ? offer.tier_ids?.includes(viewTier.id) : null;
           return (
-            <li key={offer.id} className="flex items-start justify-between gap-3 px-4 py-3">
-              <div className="min-w-0">
-                <p className={`text-[13px] font-medium ${unlocked === false ? 'text-slate-400' : 'text-navy-800'}`}>{tr(offer.title)}</p>
-                <p className="mt-0.5 text-xs font-semibold tabular-nums text-emerald-700">{offerValue(offer, t)}</p>
+            <li key={offer.id} className={`flex items-center gap-3 rounded-lg px-3 py-2.5 ${included === false ? 'bg-slate-50' : 'bg-navy-50'}`}>
+              <div className="min-w-0 flex-1">
+                <p className={`font-display text-[15px] font-bold leading-tight tabular-nums ${included === false ? 'text-slate-400' : 'text-gold-700'}`}>
+                  {offerValue(offer, t)}
+                </p>
+                <p className={`mt-0.5 truncate text-[13px] ${included === false ? 'text-slate-400' : 'text-navy-900'}`}>{tr(offer.title)}</p>
               </div>
-              {unlocked === null ? (
-                <div className="flex shrink-0 flex-wrap justify-end gap-1">
-                  {(offer.tiers || []).map((tier) => <TierBadge key={tier.id} name={tr(tier.name)} color={tier.color} />)}
-                </div>
-              ) : unlocked ? (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-2xs font-semibold text-emerald-700 ring-1 ring-inset ring-emerald-600/20">
-                  <Icon icon={Unlock} size={11} /> {t('offers.unlocked')}
-                </span>
-              ) : (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-slate-100 px-2 py-0.5 text-2xs font-medium text-slate-500" title={minTier ? `${t('offers.unlockWith')} ${tr(minTier.name)}` : ''}>
-                  <Icon icon={Lock} size={11} /> {minTier ? tr(minTier.name) : t('offers.locked')}
+              {included ? (
+                <Icon icon={Check} size={16} className="shrink-0 text-navy-700" aria-label={t('offers.unlocked')} />
+              ) : lowest && (
+                <span className="shrink-0 whitespace-nowrap text-[11px] font-medium text-slate-500">
+                  {t('offers.fromTier').replace('{tier}', tr(lowest.name))}
                 </span>
               )}
             </li>
           );
         })}
-        {offers.length === 0 && <li className="px-4 py-3 text-xs text-slate-400">—</li>}
+        {offers.length === 0 && <li className="rounded-lg bg-slate-50 px-3 py-2.5 text-[13px] text-slate-400">{t('offers.noneYet')}</li>}
       </ul>
+
+      {(more > 0 || partner.google_maps_url) && (
+        <footer className="mt-4 flex items-center justify-between gap-3 text-[13px]">
+          <span className="text-slate-500">{more > 0 && t('offers.more').replace('{n}', more)}</span>
+          {partner.google_maps_url && (
+            <a href={partner.google_maps_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-medium text-navy-800 hover:text-navy-900 hover:underline">
+              <Icon icon={MapPin} size={14} /> {t('partners.directions')}
+            </a>
+          )}
+        </footer>
+      )}
     </article>
   );
 }

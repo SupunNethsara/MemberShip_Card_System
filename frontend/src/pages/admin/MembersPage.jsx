@@ -15,7 +15,7 @@ import { date, dateTime, errorMessage, fieldErrors, money, relative, tr } from '
 export default function MembersPage() {
   useDocumentTitle('Members');
   const [params, update, raw] = useTableState({ sort: 'created_at', direction: 'desc' });
-  const { data, isLoading, isFetching } = useMembersQuery(params);
+  const { data, isLoading, isFetching, refetch } = useMembersQuery(params);
   const { data: tiers } = useTiersQuery({ per_page: 100 });
   const [selected, setSelected] = useState(null);
   const [creating, setCreating] = useState(false);
@@ -74,6 +74,7 @@ export default function MembersPage() {
       <DataTable
         columns={columns}
         data={data}
+        onRetry={refetch}
         loading={isLoading}
         fetching={isFetching}
         state={raw}

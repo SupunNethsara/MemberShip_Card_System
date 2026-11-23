@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, BookOpen, Building2, CreditCard, Globe, Landmark, Plus, Settings2, Star, Trash2 } from 'lucide-react';
 import {
-  Alert, Button, Can, Card, ConfirmDialog, CopyField, EmptyState, Icon, Input, Modal, MultilingualInput, PageHeader,
+  Alert, Button, Can, Card, ConfirmDialog, CopyField, EmptyState, Icon, Input, LoadError, Modal, MultilingualInput, PageHeader,
   Segmented, Skeleton, SlideOverDrawer, StatusBadge, Toggle,
 } from '../../components/ui';
 import { CredentialFields, SettingFields } from './gateway/DriverFields';
@@ -10,14 +10,14 @@ import { useDeletePaymentGatewayMutation, usePaymentGatewaysQuery, useSavePaymen
 import { useDocumentTitle, usePermission, useToast } from '../../hooks';
 import { emptyTr, errorMessage, fieldErrors, relative } from '../../lib/format';
 
-const DRIVER_ICON = { payhere: CreditCard, stripe: Globe, webxpay: Building2, manual: Landmark };
+const DRIVER_ICON = { onepay: CreditCard, payhere: CreditCard, stripe: Globe, webxpay: Building2, manual: Landmark };
 
 export default function PaymentGatewaysPage() {
   useDocumentTitle('Payment Gateways');
   const can = usePermission();
   const canManage = can('gateways.payment.manage');
   const toast = useToast();
-  const { data, isLoading } = usePaymentGatewaysQuery();
+  const { data, isLoading, refetch } = usePaymentGatewaysQuery();
   const [save] = useSavePaymentGatewayMutation();
   const [editing, setEditing] = useState(null);
   const [adding, setAdding] = useState(false);
@@ -87,7 +87,8 @@ export default function PaymentGatewaysPage() {
             </div>
           </div>
         ))}
-        {!isLoading && !gateways.length && <div className="surface"><EmptyState icon={CreditCard} title="No payment gateways" description="Add PayHere, Stripe, WebXPay or bank transfer to start accepting payments." /></div>}
+        {!isLoading && !data && <LoadError onRetry={refetch} />}
+        {!isLoading && data && !gateways.length && <div className="surface"><EmptyState icon={CreditCard} title="No payment gateways" description="Add Onepay, PayHere, Stripe, WebXPay or bank transfer to start accepting payments." /></div>}
       </div>
 
       <GatewayDrawer gateway={editing} drivers={drivers} readOnly={!canManage} onClose={() => setEditing(null)} />

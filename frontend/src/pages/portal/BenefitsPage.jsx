@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Gift, Lock, MapPin, Search, Unlock } from 'lucide-react';
-import { Button, EmptyState, Icon, PageHeader, Segmented, Skeleton, TierBadge } from '../../components/ui';
+import { Button, EmptyState, Icon, LoadError, PageHeader, Segmented, Skeleton, TierBadge } from '../../components/ui';
 import CategoryIcon from '../../components/public/CategoryIcon';
 import { useMemberBenefitsQuery, usePublicCategoriesQuery } from '../../app/api';
 import { useDebounced, useDocumentTitle, useT } from '../../hooks';
@@ -16,7 +16,8 @@ export default function BenefitsPage() {
   const [page, setPage] = useState(1);
   const debounced = useDebounced(search);
   const { data: categories = [] } = usePublicCategoriesQuery();
-  const { data, isLoading, isFetching } = useMemberBenefitsQuery({ scope, category, search: debounced, page, per_page: 12 });
+  const { data, isLoading, isFetching, isError, refetch } = useMemberBenefitsQuery({ scope, category, search: debounced, page, per_page: 12 });
+  const failed = isError && !isFetching;
   const offers = data?.data || [];
 
   return (
@@ -38,7 +39,8 @@ export default function BenefitsPage() {
         </select>
       </div>
 
-      <div className={`grid gap-4 sm:grid-cols-2 ${isFetching && !isLoading ? 'opacity-60' : ''}`}>
+      {failed && <LoadError onRetry={refetch} />}
+      <div className={`grid gap-4 sm:grid-cols-2 ${isFetching && !isLoading ? 'opacity-60' : ''} ${failed ? 'hidden' : ''}`}>
         {isLoading && [0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-40 rounded-lg" />)}
         {offers.map((o) => (
           <article key={o.id} className={`surface flex flex-col p-5 ${o.is_unlocked ? '' : 'bg-slate-50/60'}`}>
@@ -67,7 +69,7 @@ export default function BenefitsPage() {
         ))}
       </div>
 
-      {!isLoading && offers.length === 0 && (
+      {!isLoading && !failed && offers.length === 0 && (
         <div className="surface">
           <EmptyState
             icon={Gift}

@@ -5,7 +5,7 @@ import CardFront, { CARD_MM } from './card/CardFront';
  * scaled fluidly to the available width via container-query units.
  */
 export default function MembershipCard({
-  name, memberCode, tierName, tierColor, expiresAt, verifyUrl, status = 'active',
+  name, memberCode, tierSlug, tierName, tierColor, expiresAt, verifyUrl, status = 'active',
   brandSi, brandEn, logoUrl, locale = 'en', labels = {}, className = '',
 }) {
   const active = status === 'active';
@@ -19,6 +19,7 @@ export default function MembershipCard({
           unit="cq"
           name={name}
           memberCode={memberCode}
+          tierSlug={tierSlug}
           tierName={tierName}
           tierColor={tierColor}
           expiresAt={expiresAt}

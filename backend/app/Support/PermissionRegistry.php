@@ -51,6 +51,10 @@ final class PermissionRegistry
             'sms.templates.manage' => 'Edit SMS event templates',
             'sms.logs.view' => 'View SMS delivery logs',
         ],
+        'Contact Inquiries' => [
+            'inquiries.view' => 'View contact form inquiries',
+            'inquiries.manage' => 'Update inquiry status, notes & delete inquiries',
+        ],
         'CMS & Localization' => [
             'cms.view' => 'View CMS content',
             'cms.manage' => 'Edit homepage, FAQs, terms & site settings',
@@ -73,6 +77,7 @@ final class PermissionRegistry
                 'cards.view', 'cards.print', 'cards.issue',
                 'tiers.view', 'tiers.manage', 'partners.view', 'offers.view', 'payments.view',
                 'sms.logs.view', 'sms.templates.manage', 'cms.view', 'cms.manage', 'staff.view',
+                'inquiries.view', 'inquiries.manage',
             ],
         ],
         'Partner Manager' => [
@@ -92,7 +97,7 @@ final class PermissionRegistry
         'Support Staff' => [
             'description' => 'Assists members with accounts, payments and SMS issues.',
             'staff' => true,
-            'permissions' => ['members.view', 'members.update', 'payments.view', 'tiers.view', 'partners.view', 'offers.view', 'sms.logs.view', 'cards.view', 'cards.print', 'cards.issue'],
+            'permissions' => ['members.view', 'members.update', 'payments.view', 'tiers.view', 'partners.view', 'offers.view', 'sms.logs.view', 'cards.view', 'cards.print', 'cards.issue', 'inquiries.view', 'inquiries.manage'],
         ],
         'Member' => ['description' => 'Card holder with access to the member portal.', 'staff' => false, 'permissions' => []],
     ];

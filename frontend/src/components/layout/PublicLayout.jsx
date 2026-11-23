@@ -1,9 +1,9 @@
 import { Suspense, useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ArrowUp, Clock, CreditCard, Home, Lock, LogOut, Mail, MapPin, Menu, MessageCircle, Phone, ShieldCheck, Sparkles, Store, User, X } from 'lucide-react';
+import { ArrowUp, Clock, CreditCard, Home, Lock, LogOut, Mail, MapPin, Menu, MessageCircle, Phone, ShieldCheck, Store, User, UserPlus, X } from 'lucide-react';
 import { SOCIAL_PLATFORMS, socialHref } from '../../lib/social';
-import { Button, Icon, PageLoader } from '../ui';
+import { Icon, PageLoader } from '../ui';
 import LanguageSwitcher from './LanguageSwitcher';
 import { useT } from '../../hooks';
 import { usePublicContentQuery, useLogoutApiMutation } from '../../app/api';
@@ -55,7 +55,7 @@ export function FullLogo({ to = '/', className = 'h-16' }) {
 export default function PublicLayout() {
   const { t, tr } = useT();
   const user = useSelector((s) => s.auth.user);
-  const { data } = usePublicContentQuery();
+  const { data, isLoading: contentLoading } = usePublicContentQuery();
   const [open, setOpen] = useState(false);
   const signOut = useSignOut();
   const location = useLocation();
@@ -76,6 +76,8 @@ export default function PublicLayout() {
     { to: '/contact', label: t('nav.contact') },
   ];
 
+  // Header actions share one height (44px — a comfortable tap target) so the row lines up.
+  const headerBtn = 'h-11 items-center gap-2 whitespace-nowrap rounded-lg px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-gold-400';
   const linkCls = ({ isActive }) => `text-sm font-medium transition-colors ${isActive ? 'text-navy-900' : 'text-slate-600 hover:text-navy-900'}`;
 
   return (
@@ -85,7 +87,7 @@ export default function PublicLayout() {
         {/* Three-column bar: logo (left) · links (centre) · actions (right) */}
         <div className="mx-auto grid h-20 max-w-6xl grid-cols-[auto_1fr_auto] items-center gap-4 px-4 sm:px-6 md:h-24">
           <FullLogo className="h-[52px] sm:h-[66px] md:h-[84px]" />
-          <nav className="hidden items-center justify-center gap-6 md:flex">
+          <nav className="hidden items-center justify-center gap-6 lg:flex">
             {links.map((l) =>
               l.hash ? (
                 <Link key={l.to} to={l.to} className="text-sm font-medium text-slate-600 hover:text-navy-900">{l.label}</Link>
@@ -94,31 +96,37 @@ export default function PublicLayout() {
               )
             )}
           </nav>
-          <span className="md:hidden" aria-hidden="true" />
-          <div className="flex items-center justify-end gap-2">
-            <LanguageSwitcher className="inline-flex" />
+          <span className="lg:hidden" aria-hidden="true" />
+          <div className="flex items-center justify-end gap-2 sm:gap-3">
+            <LanguageSwitcher size="lg" />
             {user ? (
               <>
-                <Link to={user.is_staff ? '/admin' : '/portal'} className="hidden sm:inline-flex">
-                  <Button size="sm">{user.is_staff ? t('nav.admin') : t('nav.portal')}</Button>
+                <Link to={user.is_staff ? '/admin' : '/portal'} className={`${headerBtn} hidden bg-navy-900 text-white hover:bg-navy-800 sm:inline-flex`}>
+                  <Icon icon={CreditCard} size={16} />
+                  {user.is_staff ? t('nav.admin') : t('nav.portal')}
                 </Link>
-                <Button size="icon" variant="ghost" onClick={signOut} aria-label={t('nav.logout')} className="hidden sm:inline-flex">
-                  <Icon icon={LogOut} size={15} />
-                </Button>
+                <button type="button" onClick={signOut} aria-label={t('nav.logout')} title={t('nav.logout')} className="hidden h-11 w-11 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-navy-900 sm:inline-flex">
+                  <Icon icon={LogOut} size={18} />
+                </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="hidden sm:block"><Button size="sm" variant="ghost">{t('nav.login')}</Button></Link>
-                <Link to="/register" className="hidden sm:block"><Button size="sm" className="whitespace-nowrap">{t('nav.join')}</Button></Link>
+                <Link to="/login" className={`${headerBtn} hidden text-navy-900 hover:bg-slate-100 sm:inline-flex`}>
+                  {t('nav.login')}
+                </Link>
+                <Link to="/register" className={`${headerBtn} hidden bg-gold-400 font-semibold text-navy-950 hover:bg-gold-300 sm:inline-flex`}>
+                  <Icon icon={UserPlus} size={17} />
+                  {t('nav.join')}
+                </Link>
               </>
             )}
-            <button className="rounded-md p-1.5 text-slate-600 hover:bg-slate-100 md:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu">
-              <Icon icon={open ? X : Menu} size={20} />
+            <button className="inline-flex h-11 w-11 items-center justify-center rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menu" aria-expanded={open}>
+              <Icon icon={open ? X : Menu} size={22} />
             </button>
           </div>
         </div>
         {open && (
-          <div className="border-t border-slate-200 bg-white px-4 py-3 md:hidden">
+          <div className="border-t border-slate-200 bg-white px-4 py-3 lg:hidden">
             <nav className="flex flex-col gap-2.5">
               {links.map((l) => (
                 <Link key={l.to} to={l.to} onClick={() => setOpen(false)} className="text-sm font-medium text-slate-700">{l.label}</Link>
@@ -129,7 +137,12 @@ export default function PublicLayout() {
                 <Link to="/refund-policy" onClick={() => setOpen(false)} className="text-xs text-slate-500 hover:text-navy-900">{t('nav.refund')}</Link>
               </div>
               {!user && <Link to="/login" onClick={() => setOpen(false)} className="text-sm font-medium text-slate-700">{t('nav.login')}</Link>}
-              {!user && <Link to="/register" onClick={() => setOpen(false)}><Button size="sm" className="w-full justify-center">{t('nav.join')}</Button></Link>}
+              {!user && (
+                <Link to="/register" onClick={() => setOpen(false)} className={`${headerBtn} mt-1 inline-flex w-full justify-center bg-gold-400 font-semibold text-navy-950 hover:bg-gold-300`}>
+                  <Icon icon={UserPlus} size={17} />
+                  {t('nav.join')}
+                </Link>
+              )}
               {user && (
                 <button onClick={() => { setOpen(false); signOut(); }} className="flex items-center gap-2 text-left text-sm font-medium text-rose-600">
                   <Icon icon={LogOut} size={16} />
@@ -149,7 +162,7 @@ export default function PublicLayout() {
         </Suspense>
       </main>
 
-      <SiteFooter data={data} siteName={siteName} />
+      <SiteFooter data={data} loading={contentLoading} siteName={siteName} />
       <ScrollToTopButton />
       <MobileBottomNav user={user} onMenuToggle={() => setOpen((o) => !o)} isMenuOpen={open} />
     </div>
@@ -174,7 +187,7 @@ export function ScrollToTopButton() {
       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
       aria-label={t('footer.backToTop')}
       title={t('footer.backToTop')}
-      className={`fixed bottom-20 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-gold-400/40 bg-navy-900/90 text-gold-300 shadow-xl backdrop-blur transition-all duration-300 hover:scale-110 hover:border-gold-400 hover:bg-gold-500 hover:text-navy-950 focus:outline-none focus:ring-2 focus:ring-gold-400 active:scale-95 sm:right-6 md:bottom-6 ${
+      className={`fixed bottom-20 right-4 z-40 flex h-11 w-11 items-center justify-center rounded-full border border-navy-700 bg-navy-900 text-white shadow-md transition-all duration-200 hover:bg-navy-800 focus:outline-none focus:ring-2 focus:ring-gold-400 sm:right-6 md:bottom-6 ${
         visible ? 'translate-y-0 opacity-100 pointer-events-auto' : 'translate-y-4 opacity-0 pointer-events-none'
       }`}
     >
@@ -311,7 +324,7 @@ export function MobileBottomNav({ user, onMenuToggle, isMenuOpen }) {
             className="flex flex-col items-center justify-center gap-1 py-1 text-center"
           >
             <div className="flex h-7 w-10 items-center justify-center rounded-full bg-navy-900 text-gold-300 shadow-sm transition-transform active:scale-95">
-              <Icon icon={Sparkles} size={15} />
+              <Icon icon={UserPlus} size={15} />
             </div>
             <span className="max-w-full truncate text-[10px] font-semibold leading-none text-navy-900">
               {t('nav.join')}
@@ -324,7 +337,7 @@ export function MobileBottomNav({ user, onMenuToggle, isMenuOpen }) {
 }
 
 /** Footer: brand + social media, quick links, and every contact channel managed in Admin › CMS › Site settings. */
-function SiteFooter({ data, siteName }) {
+function SiteFooter({ data, loading, siteName }) {
   const { t, tr } = useT();
   const s = data?.settings || {};
   const social = SOCIAL_PLATFORMS.filter((p) => s.social?.[p.key]);
@@ -342,11 +355,14 @@ function SiteFooter({ data, siteName }) {
           <div className="inline-block rounded-lg bg-white p-2">
             <img src={s.logo_url || '/brand/jeewanasaviya-logo.png'} alt={siteName} className="h-20 w-auto object-contain" />
           </div>
-          <p className="mt-4 max-w-xs text-sm text-navy-200">{tr(data?.content?.['footer.tagline'])}</p>
-          <div className="mt-4 inline-flex items-center gap-2 rounded-full border border-navy-700 bg-navy-800/80 px-3 py-1 text-2xs text-gold-300">
-            <Icon icon={ShieldCheck} size={13} className="text-gold-400" />
-            <span>Verified Membership Network</span>
-          </div>
+          {data ? (
+            <p className="mt-4 max-w-xs text-sm text-navy-200">{tr(data.content?.['footer.tagline'])}</p>
+          ) : loading && (
+            <div className="mt-4 max-w-xs space-y-2" aria-hidden="true">
+              <div className="h-3.5 w-full animate-pulse rounded bg-navy-800" />
+              <div className="h-3.5 w-2/3 animate-pulse rounded bg-navy-800" />
+            </div>
+          )}
           {social.length > 0 && (
             <div className="mt-6">
               <p className={heading}>{t('footer.follow')}</p>
@@ -392,6 +408,15 @@ function SiteFooter({ data, siteName }) {
 
         <div>
           <p className={heading}>{t('footer.support')}</p>
+          {!data && (
+            loading ? (
+              <ul className="space-y-3" aria-label={t('common.loading')}>
+                {['w-4/5', 'w-3/5', 'w-2/3', 'w-1/2'].map((w) => <li key={w} className={`h-4 animate-pulse rounded bg-navy-800 ${w}`} />)}
+              </ul>
+            ) : (
+              <p className="text-sm text-navy-300">{t('common.loadFailedTitle')}. <Link to="/contact" className="underline hover:text-white">{t('nav.contact')}</Link></p>
+            )
+          )}
           <ul className="space-y-3 text-sm text-navy-100">
             {address && <li className={row}><Icon icon={MapPin} size={15} className="mt-0.5 shrink-0 text-gold-300" /><span className="whitespace-pre-line text-navy-200">{address}</span></li>}
             {hours && <li className={row}><Icon icon={Clock} size={15} className="mt-0.5 shrink-0 text-gold-300" /><span className="text-navy-200">{hours}</span></li>}
@@ -422,7 +447,7 @@ function SiteFooter({ data, siteName }) {
             <span className="hidden sm:inline text-navy-700">·</span>
             <div className="flex items-center gap-2 text-2xs text-navy-400">
               <Icon icon={Lock} size={11} className="text-emerald-400" />
-              <span>{t('footer.securePayment', '100% Secure SSL Payments')}</span>
+              <span>{t('footer.securePayment')}</span>
             </div>
           </div>
           <div className="flex items-center gap-4">

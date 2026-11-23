@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
-import { ArrowLeft, RefreshCw, ShieldCheck, Smartphone, UserPlus } from 'lucide-react';
+import { ArrowLeft, RefreshCw, ShieldCheck, UserPlus } from 'lucide-react';
 import { Alert, Button, Input, PasswordInput, Select } from '../../components/ui';
 import { useResendRegisterOtpMutation, useSendRegisterOtpMutation, useVerifyRegisterOtpMutation } from '../../app/api';
 import { setCredentials } from '../../app/authSlice';
@@ -9,6 +9,7 @@ import { baseApi } from '../../app/baseApi';
 import { LOCALES } from '../../app/localeSlice';
 import { useDocumentTitle, useT } from '../../hooks';
 import { errorMessage, fieldErrors } from '../../lib/format';
+import OtpSentHeader, { resentMessage } from '../../components/public/OtpSentHeader';
 
 export default function RegisterPage() {
   const { t } = useT();
@@ -34,6 +35,7 @@ export default function RegisterPage() {
   });
   const [otp, setOtp] = useState('');
   const [cooldown, setCooldown] = useState(0);
+  const [sentTo, setSentTo] = useState({ channel: 'sms', destination: '' });
   const [infoMsg, setInfoMsg] = useState('');
 
   const sendErrs = fieldErrors(sendError);
@@ -53,6 +55,7 @@ export default function RegisterPage() {
     setInfoMsg('');
     try {
       const res = await sendRegisterOtp(form).unwrap();
+      setSentTo({ channel: res.channel, destination: res.destination });
       setCooldown(res.cooldown || 60);
       setStep('otp');
     } catch {
@@ -64,8 +67,9 @@ export default function RegisterPage() {
     if (cooldown > 0 || isResending) return;
     try {
       const res = await resendRegisterOtp({ phone: form.phone }).unwrap();
+      setSentTo({ channel: res.channel, destination: res.destination });
       setCooldown(res.cooldown || 60);
-      setInfoMsg(t('auth.codeSent'));
+      setInfoMsg(resentMessage(t, res.channel));
     } catch {
       /* rendered below */
     }
@@ -185,16 +189,7 @@ export default function RegisterPage() {
             </span>
           </div>
 
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gold-500/10 text-gold-600">
-              <Smartphone className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-bold text-navy-950">{t('auth.otpTitle')}</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              {t('auth.otpSub')}{' '}
-              <span className="font-semibold text-slate-900">{form.phone}</span>
-            </p>
-          </div>
+          <OtpSentHeader channel={sentTo.channel} destination={sentTo.destination || form.phone} />
 
           {infoMsg && <Alert tone="success" className="mt-5">{infoMsg}</Alert>}
           {verifyError && <Alert tone="danger" className="mt-5">{errorMessage(verifyError)}</Alert>}
@@ -204,7 +199,7 @@ export default function RegisterPage() {
             <div>
               <label
                 htmlFor="otp-input"
-                className="block text-center text-xs font-semibold uppercase tracking-wider text-slate-600"
+                className="block text-center text-sm font-medium text-slate-700"
               >
                 {t('auth.otpCode')}
               </label>
@@ -218,7 +213,7 @@ export default function RegisterPage() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white py-3 text-center font-mono text-3xl font-extrabold tracking-[0.4em] text-navy-950 shadow-sm transition placeholder:text-slate-300 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/30"
+                className="mt-2 w-full rounded-md border border-slate-300 bg-white py-2.5 text-center font-mono text-2xl font-semibold tracking-[0.35em] text-navy-950 placeholder:text-slate-300 focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
               />
               <p className="mt-1.5 text-center text-xs text-slate-500">{t('auth.otpHint')}</p>
             </div>

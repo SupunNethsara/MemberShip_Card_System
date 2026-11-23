@@ -68,6 +68,12 @@ class SmsService
         $chain = $gateway ? collect([$gateway]) : $this->gatewayChain();
         $log = null;
 
+        // Mask OTP codes in database logs so staff or log-viewers cannot read active verification codes.
+        $logMessage = $message;
+        if (in_array($event, ['otp', 'password_reset_otp'], true)) {
+            $logMessage = preg_replace('/\b\d{6}\b/', '******', $message);
+        }
+
         foreach ($chain as $gw) {
             try {
                 $result = $this->factory->make($gw)->send($to, $message);
@@ -81,7 +87,7 @@ class SmsService
                 'recipient' => $to,
                 'event' => $event,
                 'locale' => $locale,
-                'message' => $message,
+                'message' => $logMessage,
                 'status' => $result->success ? 'sent' : 'failed',
                 'http_status' => $result->httpStatus,
                 'provider_response' => $result->response,

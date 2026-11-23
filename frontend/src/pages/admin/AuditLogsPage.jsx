@@ -19,7 +19,7 @@ const meta = (action) => ACTION_META.find(([p]) => action.startsWith(p)) || [nul
 export default function AuditLogsPage() {
   useDocumentTitle('Audit Log');
   const [params, update, raw] = useTableState();
-  const { data, isLoading, isFetching } = useAuditLogsQuery(params);
+  const { data, isLoading, isFetching, refetch } = useAuditLogsQuery(params);
   const [selected, setSelected] = useState(null);
 
   const columns = [
@@ -42,6 +42,7 @@ export default function AuditLogsPage() {
       <DataTable
         columns={columns}
         data={data}
+        onRetry={refetch}
         loading={isLoading}
         fetching={isFetching}
         state={raw}

@@ -149,10 +149,11 @@ class PaymentService
                 'expiry_date' => $invoice->membership?->expires_at?->format('Y-m-d'),
             ]);
 
+            $tierName = $invoice->tier->translate('name', $invoice->user->preferred_locale) ?? 'membership';
             PortalNotification::dispatchTo(
                 $invoice->user,
                 'Payment Approved',
-                "Your payment of {$invoice->currency} {$invoice->amount} for {$invoice->tier->name} has been approved!",
+                "Your payment of {$invoice->currency} {$invoice->amount} for {$tierName} has been approved!",
                 'success',
                 '/member/dashboard',
                 'check-circle'

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { AlertTriangle, CheckCircle2, Info, X, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, CloudOff, Info, RotateCw, X, XCircle } from 'lucide-react';
 import Icon from './Icon';
 import { dismissToast } from '../../app/toastSlice';
+import { useT } from '../../hooks';
 
 export function Skeleton({ className = '' }) {
   return <div className={`animate-pulse rounded bg-slate-200/70 ${className}`} />;
@@ -88,21 +89,10 @@ export function TopProgress() {
   );
 }
 
-/** Brand mark inside a rotating gold ring. */
-export function BrandSpinner({ size = 72 }) {
-  return (
-    <span className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
-      <span className="absolute inset-0 rounded-full border-[3px] border-navy-100" />
-      <span className="absolute inset-0 animate-spin rounded-full border-[3px] border-transparent border-r-gold-400 border-t-gold-500 [animation-duration:900ms]" />
-      <img src="/brand/jeewanasaviya-logo.png" alt="" className="animate-soft-pulse object-contain" style={{ width: size * 0.66, height: size * 0.66 }} />
-    </span>
-  );
-}
-
 /**
- * Loading state for pages and guarded routes.
- * The top bar appears at once; the branded spinner only after a short delay,
- * so fast loads never flash a spinner (that flash is what feels "not smooth").
+ * Loading state for pages and guarded routes: logo + a thin gold line.
+ * Uses the boot-screen classes from index.html, so the first load hands over without a visual change.
+ * Inline loaders wait a moment before appearing, so fast loads never flash anything.
  */
 export function PageLoader({ fullscreen = false, delay = 180 }) {
   const [show, setShow] = useState(delay === 0);
@@ -112,17 +102,58 @@ export function PageLoader({ fullscreen = false, delay = 180 }) {
     return () => clearTimeout(id);
   }, [delay]);
 
+  if (!fullscreen && !show) return <div className="boot boot--inline" />;
   return (
-    <>
-      <TopProgress />
-      <div className={`flex items-center justify-center ${fullscreen ? 'fixed inset-0 z-[85] bg-white/85 backdrop-blur-[2px]' : 'min-h-[45vh]'}`}>
-        {show && (
-          <div className="flex animate-fade-in flex-col items-center gap-3">
-            <BrandSpinner />
-            <span className="text-2xs font-semibold uppercase tracking-[0.18em] text-navy-400">Loading</span>
-          </div>
-        )}
-      </div>
-    </>
+    <div className={`boot ${fullscreen ? 'boot--full' : 'boot--inline'} ${delay === 0 ? '' : 'boot--fade'}`} role="status" aria-label="Loading">
+      {show && (
+        <>
+          <img src="/brand/jeewanasaviya-logo.png" alt="" />
+          <span className="boot-track" />
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Shown in place of a section whose data couldn't be fetched (server down, timeout, 5xx).
+ * Keeps the section's footprint, says what happened in plain words, and offers a retry.
+ * `compact` fits inside a card or table; the default suits a full page section.
+ */
+export function LoadError({ onRetry, title, description, compact = false, tone = 'light', className = '' }) {
+  const { t } = useT();
+  const [retrying, setRetrying] = useState(false);
+  const dark = tone === 'dark';
+  const boxed = tone === 'light'; // 'plain' sits inside an existing card/table without its own border
+  const retry = async () => {
+    if (!onRetry) return;
+    setRetrying(true);
+    try { await onRetry(); } finally { setRetrying(false); }
+  };
+
+  return (
+    <div
+      role="status"
+      className={`flex flex-col items-center justify-center text-center ${compact ? 'px-4 py-8' : 'px-6 py-14'} ${
+        dark ? 'text-slate-300' : boxed ? 'rounded-lg border border-dashed border-slate-300 bg-white/60 text-slate-500' : 'text-slate-500'
+      } ${className}`}
+    >
+      <Icon icon={CloudOff} size={compact ? 18 : 22} className={dark ? 'text-slate-400' : 'text-slate-400'} />
+      <p className={`mt-3 text-sm font-semibold ${dark ? 'text-white' : 'text-navy-900'}`}>{title || t('common.loadFailedTitle')}</p>
+      <p className="mt-1 max-w-sm text-xs">{description || t('common.loadFailedBody')}</p>
+      {onRetry && (
+        <button
+          type="button"
+          onClick={retry}
+          disabled={retrying}
+          className={`mt-4 inline-flex h-8 items-center gap-1.5 rounded-md border px-3 text-xs font-medium transition-colors disabled:opacity-60 ${
+            dark ? 'border-white/25 text-white hover:bg-white/10' : 'border-slate-300 bg-white text-navy-900 hover:bg-slate-50'
+          }`}
+        >
+          <Icon icon={RotateCw} size={13} className={retrying ? 'animate-spin' : ''} />
+          {t('common.retry')}
+        </button>
+      )}
+    </div>
   );
 }

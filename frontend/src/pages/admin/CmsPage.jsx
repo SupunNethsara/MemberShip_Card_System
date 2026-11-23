@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { ArrowDown, ArrowUp, Eye, Pencil, Plus, Save, Trash2 } from 'lucide-react';
 import {
-  Alert, Button, Can, Card, ConfirmDialog, EmptyState, Icon, Input, Modal, MultilingualInput, PageHeader, Skeleton, StatusBadge, Tabs, Toggle,
+  Alert, Button, Can, Card, ConfirmDialog, EmptyState, Icon, Input, LoadError, Modal, MultilingualInput, PageHeader, Skeleton, StatusBadge, Tabs, Toggle,
 } from '../../components/ui';
 import { useCmsQuery, useDeleteFaqMutation, useFaqsQuery, useSaveCmsMutation, useSaveFaqMutation, useUploadBrandLogoMutation } from '../../app/api';
 import { useDocumentTitle, usePermission, useToast } from '../../hooks';
@@ -31,15 +31,15 @@ export default function CmsPage() {
 }
 
 function useCmsDraft() {
-  const { data, isLoading } = useCmsQuery();
+  const { data, isLoading, refetch } = useCmsQuery();
   const contents = useMemo(() => data?.contents?.data ?? data?.contents ?? [], [data]);
-  return { data, contents, isLoading };
+  return { data, contents, isLoading, refetch };
 }
 
 function ContentEditor() {
   const can = usePermission();
   const toast = useToast();
-  const { contents, isLoading } = useCmsDraft();
+  const { data: cmsData, contents, isLoading, refetch } = useCmsDraft();
   const [draft, setDraft] = useState({});
   const [save, { isLoading: saving, error }] = useSaveCmsMutation();
 
@@ -57,6 +57,7 @@ function ContentEditor() {
   };
 
   if (isLoading) return <div className="space-y-4">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-40 rounded-lg" />)}</div>;
+  if (!cmsData) return <LoadError onRetry={refetch} />;
 
   return (
     <div className="space-y-6 pb-20">
@@ -98,7 +99,7 @@ function ContentEditor() {
 function FaqEditor() {
   const can = usePermission();
   const toast = useToast();
-  const { data, isLoading } = useFaqsQuery({ sort: 'sort_order', direction: 'asc' });
+  const { data, isLoading, refetch } = useFaqsQuery({ sort: 'sort_order', direction: 'asc' });
   const [save] = useSaveFaqMutation();
   const [remove, { isLoading: removing }] = useDeleteFaqMutation();
   const [editing, setEditing] = useState(null);
@@ -147,7 +148,8 @@ function FaqEditor() {
             </Can>
           </div>
         ))}
-        {!isLoading && !faqs.length && <EmptyState title="No FAQs yet" />}
+        {!isLoading && !data && <LoadError compact tone="plain" onRetry={refetch} />}
+        {!isLoading && data && !faqs.length && <EmptyState title="No FAQs yet" />}
       </div>
       <FaqModal faq={editing} onClose={() => setEditing(null)} nextOrder={faqs.length} />
       <ConfirmDialog open={!!deleting} onClose={() => setDeleting(null)} loading={removing} title="Delete FAQ?" description={tr(deleting?.question)} confirmLabel="Delete" onConfirm={async () => { await remove(deleting.id); toast('FAQ deleted'); setDeleting(null); }} />
@@ -181,7 +183,7 @@ function FaqModal({ faq, onClose, nextOrder }) {
 function SettingsEditor() {
   const can = usePermission();
   const toast = useToast();
-  const { data, isLoading } = useCmsDraft();
+  const { data, isLoading, refetch } = useCmsDraft();
   const [form, setForm] = useState({ site_name: '', contact_email: '', contact_phone: '' });
   const [save, { isLoading: saving, error }] = useSaveCmsMutation();
   const errs = fieldErrors(error);
@@ -192,6 +194,7 @@ function SettingsEditor() {
   };
 
   if (isLoading) return <Skeleton className="h-48 rounded-lg" />;
+  if (!data) return <LoadError onRetry={refetch} />;
   return (
     <Card title="Site settings" description="Brand name and support contact shown across the site, receipts and SMS ({site_name})."
       footer={<Can perform="cms.manage"><div className="flex justify-end"><Button size="sm" icon={Save} loading={saving} onClick={submit}>Save settings</Button></div></Can>}>

@@ -14,7 +14,7 @@ export default function OffersPage() {
   const can = usePermission();
   const [search] = useSearchParams();
   const [params, update, raw] = useTableState({ partner: search.get('partner') || undefined });
-  const { data, isLoading, isFetching } = useOffersQuery(params);
+  const { data, isLoading, isFetching, refetch } = useOffersQuery(params);
   const { data: partners = [] } = usePartnerOptionsQuery();
   const { data: tiersRes } = useTiersQuery({ per_page: 100, sort: 'priority', direction: 'asc' });
   const tiers = tiersRes?.data || [];
@@ -55,6 +55,7 @@ export default function OffersPage() {
       <DataTable
         columns={columns}
         data={data}
+        onRetry={refetch}
         loading={isLoading}
         fetching={isFetching}
         state={raw}

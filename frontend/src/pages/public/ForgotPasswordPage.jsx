@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
-import { ArrowLeft, KeyRound, RefreshCw, ShieldCheck, Smartphone } from 'lucide-react';
+import { ArrowLeft, KeyRound, RefreshCw, ShieldCheck } from 'lucide-react';
 import { Alert, Button, Input, PasswordInput } from '../../components/ui';
 import { useResendForgotPasswordOtpMutation, useResetPasswordWithOtpMutation, useSendForgotPasswordOtpMutation } from '../../app/api';
 import { setCredentials } from '../../app/authSlice';
 import { baseApi } from '../../app/baseApi';
 import { useDocumentTitle, useT } from '../../hooks';
 import { errorMessage, fieldErrors } from '../../lib/format';
+import OtpSentHeader, { resentMessage } from '../../components/public/OtpSentHeader';
 
 export default function ForgotPasswordPage() {
   const { t } = useT();
@@ -23,6 +24,7 @@ export default function ForgotPasswordPage() {
   const [identifier, setIdentifier] = useState('');
   const [phone, setPhone] = useState('');
   const [maskedPhone, setMaskedPhone] = useState('');
+  const [sentTo, setSentTo] = useState({ channel: 'sms', destination: '' });
   const [otp, setOtp] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -47,6 +49,7 @@ export default function ForgotPasswordPage() {
       const res = await sendForgotOtp({ identifier: identifier.trim() }).unwrap();
       setPhone(res.phone);
       setMaskedPhone(res.masked_phone || res.phone);
+      setSentTo({ channel: res.channel, destination: res.destination });
       setCooldown(res.cooldown || 60);
       setStep('reset');
     } catch {
@@ -58,8 +61,9 @@ export default function ForgotPasswordPage() {
     if (cooldown > 0 || isResending) return;
     try {
       const res = await resendForgotOtp({ phone }).unwrap();
+      setSentTo({ channel: res.channel, destination: res.destination });
       setCooldown(res.cooldown || 60);
-      setInfoMsg(t('auth.codeSent'));
+      setInfoMsg(resentMessage(t, res.channel));
     } catch {
       /* handled by resendError */
     }
@@ -144,16 +148,7 @@ export default function ForgotPasswordPage() {
             </span>
           </div>
 
-          <div className="text-center">
-            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-gold-500/10 text-gold-600">
-              <Smartphone className="h-6 w-6" />
-            </div>
-            <h2 className="text-xl font-bold text-navy-950">{t('auth.otpTitle')}</h2>
-            <p className="mt-1 text-sm text-slate-600">
-              {t('auth.otpSub')}{' '}
-              <span className="font-semibold text-slate-900">{maskedPhone}</span>
-            </p>
-          </div>
+          <OtpSentHeader channel={sentTo.channel} destination={sentTo.destination || maskedPhone} />
 
           {infoMsg && <Alert tone="success" className="mt-5">{infoMsg}</Alert>}
           {resetError && !Object.keys(resetErrs).length && (
@@ -165,7 +160,7 @@ export default function ForgotPasswordPage() {
             <div>
               <label
                 htmlFor="otp-input"
-                className="block text-center text-xs font-semibold uppercase tracking-wider text-slate-600"
+                className="block text-center text-sm font-medium text-slate-700"
               >
                 {t('auth.otpCode')}
               </label>
@@ -179,7 +174,7 @@ export default function ForgotPasswordPage() {
                 value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                 placeholder="000000"
-                className="mt-2 w-full rounded-xl border border-slate-300 bg-white py-3 text-center font-mono text-3xl font-extrabold tracking-[0.4em] text-navy-950 shadow-sm transition placeholder:text-slate-300 focus:border-gold-500 focus:outline-none focus:ring-2 focus:ring-gold-500/30"
+                className="mt-2 w-full rounded-md border border-slate-300 bg-white py-2.5 text-center font-mono text-2xl font-semibold tracking-[0.35em] text-navy-950 placeholder:text-slate-300 focus:border-navy-900 focus:outline-none focus:ring-1 focus:ring-navy-900"
               />
               {resetErrs.otp && (
                 <p className="mt-1 text-center text-xs text-rose-600">{resetErrs.otp}</p>

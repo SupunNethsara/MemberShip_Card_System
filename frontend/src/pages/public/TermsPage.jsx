@@ -22,7 +22,7 @@ const DEFAULT_TERMS = [
   {
     icon: CreditCard,
     title: '4. Electronic Payments & Gateway Security',
-    body: 'All online subscription fees are transacted via licensed, bank-approved, PCI-DSS compliant payment gateways (including PayHere, WebXPay, Stripe, and authorized acquirers). Customers agree to provide accurate, authorized payment instruments. Jeewanasaviya does not hold or store debit/credit card CVV or card numbers on internal servers.',
+    body: 'All online subscription fees are transacted via licensed, bank-approved, PCI-DSS compliant payment gateways (including Onepay, PayHere, WebXPay, Stripe, and authorized acquirers). Customers agree to provide accurate, authorized payment instruments. Jeewanasaviya does not hold or store debit/credit card CVV or card numbers on internal servers.',
   },
   {
     icon: FileCheck,

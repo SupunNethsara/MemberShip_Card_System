@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { CheckCircle2, Printer, RotateCcw } from 'lucide-react';
 import { Alert, Button, Icon, Modal, Segmented, Spinner, Toggle } from '../../../components/ui';
 import CardFront, { CardBack, CARD_MM } from '../../../components/card/CardFront';
+import { ensureCardArt } from '../../../components/card/ArtworkCardFront';
 import CardPrintSheet, { sheetPagesFor } from '../../../components/card/CardPrintSheet';
 import { useCardSheetMutation, useMarkCardsPrintedMutation, usePublicContentQuery } from '../../../app/api';
 import { usePermission, useToast } from '../../../hooks';
@@ -56,12 +57,12 @@ export default function CardPrintModal({ userIds, open, onClose, onPrinted }) {
 
   const doPrint = () => {
     setPrinting(true);
-    // Let React mount the print sheet before opening the dialog.
-    requestAnimationFrame(() => requestAnimationFrame(() => {
+    // Let React mount the print sheet and the card artwork finish loading before opening the dialog.
+    ensureCardArt().then(() => requestAnimationFrame(() => requestAnimationFrame(() => {
       const after = () => { window.removeEventListener('afterprint', after); setPrinting(false); setStep('confirm'); };
       window.addEventListener('afterprint', after);
       window.print();
-    }));
+    })));
   };
 
   const confirmPrinted = async () => {
@@ -138,14 +139,14 @@ export default function CardPrintModal({ userIds, open, onClose, onPrinted }) {
                   <p className="mb-2 text-xs font-medium text-slate-500">Front</p>
                   <Scaled>
                     <CardFront unit="cq" variant="id" name={single.name} memberCode={single.member_code} nic={single.nic} joinedAt={single.joined_at}
-                      tierName={single.tier?.name?.en} tierColor={single.tier?.color} expiresAt={single.expires_at}
+                      tierSlug={single.tier?.slug} tierName={single.tier?.name?.en} tierColor={single.tier?.color} expiresAt={single.expires_at}
                       verifyUrl={single.verify_url} brandSi={brand.si} brandEn={brand.en} logoUrl={brand.logo} />
                   </Scaled>
                 </div>
                 <div>
                   <p className="mb-2 text-xs font-medium text-slate-500">Back {includeBack ? '' : '(not printed)'}</p>
                   <Scaled className={includeBack ? '' : 'opacity-40'}>
-                    <CardBack unit="cq" memberCode={single.member_code} memberSince={single.joined_at} contactPhone={single.contact?.phone} contactEmail={single.contact?.email} />
+                    <CardBack unit="cq" name={single.name} verifyUrl={single.verify_url} memberCode={single.member_code} memberSince={single.joined_at} contactPhone={single.contact?.phone} contactEmail={single.contact?.email} />
                   </Scaled>
                 </div>
               </div>
@@ -155,7 +156,7 @@ export default function CardPrintModal({ userIds, open, onClose, onPrinted }) {
                   <div key={c.user_id}>
                     <Scaled>
                       <CardFront unit="cq" variant="id" name={c.name} memberCode={c.member_code} nic={c.nic} joinedAt={c.joined_at}
-                        tierName={c.tier?.name?.en} tierColor={c.tier?.color} expiresAt={c.expires_at}
+                        tierSlug={c.tier?.slug} tierName={c.tier?.name?.en} tierColor={c.tier?.color} expiresAt={c.expires_at}
                         verifyUrl={c.verify_url} brandSi={brand.si} brandEn={brand.en} logoUrl={brand.logo} />
                     </Scaled>
                     <p className="mt-1.5 truncate text-2xs text-slate-500">

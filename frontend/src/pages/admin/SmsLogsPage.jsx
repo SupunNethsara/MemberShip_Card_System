@@ -11,7 +11,7 @@ export default function SmsLogsPage() {
   useDocumentTitle('SMS Delivery Logs');
   const can = usePermission();
   const [params, update, raw] = useTableState();
-  const { data, isLoading, isFetching } = useSmsLogsQuery(params, { pollingInterval: 30000 });
+  const { data, isLoading, isFetching, refetch } = useSmsLogsQuery(params, { pollingInterval: 30000 });
   const { data: gws } = useSmsGatewaysQuery(undefined, { skip: !can('gateways.sms.view|gateways.sms.manage') });
   const [selected, setSelected] = useState(null);
   const s = data?.summary;
@@ -37,6 +37,7 @@ export default function SmsLogsPage() {
       <DataTable
         columns={columns}
         data={data}
+        onRetry={refetch}
         loading={isLoading}
         fetching={isFetching}
         state={raw}

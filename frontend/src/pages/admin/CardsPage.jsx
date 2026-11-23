@@ -15,7 +15,7 @@ export default function CardsPage() {
   const can = usePermission();
   const toast = useToast();
   const [params, update, raw] = useTableState({ status: 'pending', sort: 'created_at', direction: 'desc' });
-  const { data, isLoading, isFetching } = useMemberCardsQuery(params);
+  const { data, isLoading, isFetching, refetch } = useMemberCardsQuery(params);
   const { data: tiers } = useTiersQuery({ per_page: 100 });
   const [markIssued, { isLoading: issuing }] = useMarkCardsIssuedMutation();
   const [selected, setSelected] = useState(() => new Set());
@@ -149,6 +149,7 @@ export default function CardsPage() {
       <DataTable
         columns={columns}
         data={data}
+        onRetry={refetch}
         loading={isLoading}
         fetching={isFetching}
         state={raw}

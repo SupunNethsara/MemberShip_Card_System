@@ -144,7 +144,7 @@ Open **Partners** in the top menu.
    - **Password**: at least 8 characters, including letters and numbers
 3. Click **Create account**.
 
-You are signed in immediately and taken to checkout. Your permanent **Member ID** (for example `MEM-2026-00042`) is created now, and a welcome SMS is sent in your chosen language.
+You are signed in immediately and taken to checkout. Your permanent **Member ID** (for example `JHMS 1251 3428`) is created now, and a welcome SMS is sent in your chosen language.
 
 ### 3.4 Terms & Conditions
 
@@ -161,7 +161,7 @@ The Member Portal has four tabs: **My card**, **Benefits**, **Billing** and **Pr
 This is the member's digital membership card. It shows:
 
 - Member name
-- **Member ID** (e.g. `MEM-2026-00482`)
+- **Member ID** (e.g. `JHMS 4807 2215`)
 - Current **tier**, as a coloured badge
 - **Valid until** date
 - A **QR code** that partner staff scan to verify the card
@@ -592,7 +592,7 @@ Templates are the messages sent automatically on each event:
 | Variable | Replaced with |
 |---|---|
 | `{member_name}` | Member's full name |
-| `{member_id}` | Member ID, e.g. MEM-2026-00042 |
+| `{member_id}` | Member ID, e.g. JHMS 1251 3428 |
 | `{tier_name}` | Tier name in the member's language |
 | `{expiry_date}` | Expiry date (YYYY-MM-DD) |
 | `{amount}` | Payment amount |
@@ -1025,7 +1025,7 @@ Their account may be **Suspended** (check the member's profile), or the membersh
 
 | Item | Format | Example |
 |---|---|---|
-| Member ID | `MEM-YYYY-NNNNN` | MEM-2026-00042 |
+| Member ID | `JHMS NNNN NNNN` (8 random digits) | JHMS 1251 3428 |
 | Invoice number | `INV-YYYY-NNNNNN` | INV-2026-000128 |
 | Phone (stored) | International without + | 94771234567 |
 | Currency | LKR, two decimals | LKR 6,500.00 |

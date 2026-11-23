@@ -138,7 +138,7 @@ class MemberCardService
             'nic' => $user->nic,
             'joined_at' => $user->created_at?->toIso8601String(),
             'expires_at' => $m?->expires_at?->toIso8601String(),
-            'tier' => $m ? ['name' => $m->tier->name, 'color' => $m->tier->color] : null,
+            'tier' => $m ? ['slug' => $m->tier->slug, 'name' => $m->tier->name, 'color' => $m->tier->color] : null,
             'verify_url' => $user->card_token ? config('portal.frontend_url').'/verify/'.$user->card_token : null,
             'card_status' => $user->card?->card_status ?? MemberCard::PENDING,
             'is_reprint' => (bool) $user->card?->hasBeenPrinted(),

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AccessController;
 use App\Http\Controllers\Admin\CatalogController;
 use App\Http\Controllers\Admin\CmsController;
+use App\Http\Controllers\Admin\ContactInquiryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GatewayController;
 use App\Http\Controllers\Admin\HeroSlideController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Member\MemberAreaController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PaymentWebhookController;
+use App\Http\Controllers\Public\ContactInquiryController as PublicContactInquiryController;
 use App\Http\Controllers\Public\PublicController;
 use Illuminate\Support\Facades\Route;
 
@@ -35,6 +37,7 @@ Route::prefix('public')->group(function () {
     Route::get('partners', [PublicController::class, 'partners']);
     Route::get('gateways', [PublicController::class, 'gateways']);
     Route::get('verify/{token}', [PublicController::class, 'verify'])->middleware('throttle:30,1');
+    Route::post('contact', [PublicContactInquiryController::class, 'store'])->middleware('throttle:5,1');
 });
 
 // ── Auth ──────────────────────────────────────────────────────────────
@@ -160,6 +163,17 @@ Route::middleware(['auth:sanctum', 'active', 'staff'])->prefix('admin')->group(f
     Route::get('sms-templates', [SmsController::class, 'templates'])->middleware('permission:sms.templates.manage|gateways.sms.view');
     Route::put('sms-templates/{smsTemplate}', [SmsController::class, 'updateTemplate'])->middleware('permission:sms.templates.manage');
     Route::get('sms-logs', [SmsController::class, 'logs'])->middleware('permission:sms.logs.view');
+
+    // Contact inquiries (public "Send an Inquiry" form)
+    Route::middleware('permission:inquiries.view')->group(function () {
+        Route::get('inquiries', [ContactInquiryController::class, 'index']);
+        Route::get('inquiries/new-count', [ContactInquiryController::class, 'newCount']);
+        Route::get('inquiries/{inquiry}', [ContactInquiryController::class, 'show']);
+    });
+    Route::middleware('permission:inquiries.manage')->group(function () {
+        Route::put('inquiries/{inquiry}', [ContactInquiryController::class, 'update']);
+        Route::delete('inquiries/{inquiry}', [ContactInquiryController::class, 'destroy']);
+    });
 
     // CMS
     Route::get('cms', [CmsController::class, 'index'])->middleware('permission:cms.view');

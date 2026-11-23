@@ -11,6 +11,13 @@ use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
+// Polyfill request_parse_body() for PHP < 8.4 environments so Symfony HTTP Foundation handles PUT/PATCH/DELETE safely
+if (!function_exists('request_parse_body')) {
+    function request_parse_body(): array {
+        return [$_POST, $_FILES];
+    }
+}
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -21,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->api(prepend: [SetLocale::class]);
+        $middleware->redirectGuestsTo(fn () => null);
+
+        $middleware->redirectGuestsTo(fn () => null);
 
         $middleware->alias([
             'permission' => PermissionMiddleware::class,

@@ -28,6 +28,7 @@ function Front({ c, brand }) {
       memberCode={c.member_code}
       nic={c.nic}
       joinedAt={c.joined_at}
+      tierSlug={c.tier?.slug}
       tierName={c.tier?.name?.en ?? ''}
       tierColor={c.tier?.color}
       expiresAt={c.expires_at}
@@ -41,7 +42,7 @@ function Front({ c, brand }) {
 }
 
 function Back({ c }) {
-  return <CardBack unit="mm" memberCode={c.member_code} memberSince={c.joined_at} contactPhone={c.contact?.phone} contactEmail={c.contact?.email} />;
+  return <CardBack unit="mm" name={c.name} verifyUrl={c.verify_url} memberCode={c.member_code} memberSince={c.joined_at} contactPhone={c.contact?.phone} contactEmail={c.contact?.email} />;
 }
 
 function A4Page({ cells, isLast }) {

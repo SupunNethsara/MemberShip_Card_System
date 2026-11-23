@@ -6,7 +6,7 @@ import CardFront, { CardBack, NAVY } from './card/CardFront';
  * Rendered into <body> outside #root; index.css hides the app and shows .print-sheet in @media print.
  */
 export default function PrintableCard({
-  name, memberCode, tierName, tierColor = NAVY, expiresAt, memberSince, verifyUrl, active = true,
+  name, memberCode, tierSlug, tierName, tierColor = NAVY, expiresAt, memberSince, verifyUrl, active = true,
   siteName = 'Jeewanasaviya', brandSi = 'ජීවනසවිය', brandEn = 'JEEWANASAVIYA', logoUrl,
   contactEmail, contactPhone, locale = 'en', labels = {},
 }) {
@@ -18,11 +18,11 @@ export default function PrintableCard({
         <p style={{ fontSize: '8pt', color: '#64748b', margin: '0 0 6mm' }}>{siteName} · {memberCode} — {L.cut}</p>
         <div style={{ display: 'flex', gap: '10mm', flexWrap: 'wrap' }}>
           <CutFrame>
-            <CardFront unit="mm" name={name} memberCode={memberCode} tierName={tierName} tierColor={tierColor} expiresAt={expiresAt}
+            <CardFront unit="mm" name={name} memberCode={memberCode} tierSlug={tierSlug} tierName={tierName} tierColor={tierColor} expiresAt={expiresAt}
               verifyUrl={verifyUrl} active={active} brandSi={brandSi} brandEn={brandEn} logoUrl={logoUrl} locale={locale} labels={L} />
           </CutFrame>
           <CutFrame>
-            <CardBack unit="mm" memberCode={memberCode} memberSince={memberSince} contactPhone={contactPhone} contactEmail={contactEmail} locale={locale} labels={L} />
+            <CardBack unit="mm" name={name} verifyUrl={verifyUrl} memberCode={memberCode} memberSince={memberSince} contactPhone={contactPhone} contactEmail={contactEmail} locale={locale} labels={L} />
           </CutFrame>
         </div>
         <p style={{ fontSize: '7pt', color: '#94a3b8', marginTop: '6mm' }}>{L.scan}<br />{verifyUrl}</p>

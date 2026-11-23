@@ -17,7 +17,7 @@ const DEFAULT_SECTIONS = [
   {
     icon: Lock,
     title: '3. Payment Information & Financial Security',
-    body: 'All online monetary transactions are processed through certified, licensed payment gateways (including PayHere, WebXPay, and international banking networks). We never capture, store, or view your credit card numbers, debit card details, CVV codes, or online banking passwords. All payment transmissions occur over encrypted 256-bit SSL connections.',
+    body: 'All online monetary transactions are processed through certified, licensed payment gateways (including Onepay, PayHere, WebXPay, and international banking networks). We never capture, store, or view your credit card numbers, debit card details, CVV codes, or online banking passwords. All payment transmissions occur over encrypted 256-bit SSL connections.',
   },
   {
     icon: Eye,

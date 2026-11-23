@@ -1,6 +1,6 @@
 import { ArrowDown, ArrowUp, ChevronLeft, ChevronRight, ChevronsUpDown, Inbox, Search, X } from 'lucide-react';
 import Icon from './Icon';
-import { Skeleton, EmptyState } from './Feedback';
+import { Skeleton, EmptyState, LoadError } from './Feedback';
 
 /**
  * Server-driven data table.
@@ -27,6 +27,7 @@ export default function DataTable({
   toolbar,
   rowKey = 'id',
   dense = false,
+  onRetry,
 }) {
   const rows = data?.data ?? [];
   const meta = data?.meta;
@@ -129,7 +130,9 @@ export default function DataTable({
                 ))}
           </tbody>
         </table>
-        {!loading && rows.length === 0 && <EmptyState icon={Inbox} title={emptyTitle} description={emptyDescription} action={emptyAction} />}
+        {/* Loading finished but no payload at all → the request failed (server down / timeout), not an empty list. */}
+        {!loading && !fetching && !data && <LoadError compact tone="plain" onRetry={onRetry} />}
+        {!loading && data && rows.length === 0 && <EmptyState icon={Inbox} title={emptyTitle} description={emptyDescription} action={emptyAction} />}
       </div>
 
       {meta && meta.total > 0 && (

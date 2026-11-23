@@ -9,7 +9,7 @@ export default function StaffPage() {
   useDocumentTitle('Staff Accounts');
   const can = usePermission();
   const [params, update, raw] = useTableState();
-  const { data, isLoading, isFetching } = useStaffQuery(params);
+  const { data, isLoading, isFetching, refetch } = useStaffQuery(params);
   const [editing, setEditing] = useState(null);
   const roles = data?.roles || [];
 
@@ -38,6 +38,7 @@ export default function StaffPage() {
       <DataTable
         columns={columns}
         data={data}
+        onRetry={refetch}
         loading={isLoading}
         fetching={isFetching}
         state={raw}

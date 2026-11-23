@@ -96,9 +96,14 @@ class UserService
             $user->fill($payload);
             $user->is_staff = true;
             if (! empty($data['password'])) {
-                $user->password = Hash::make($data['password']);
+                $user->password = $data['password'];
             }
+            $dirty = array_keys($user->getDirty());
             $user->save();
+
+            if (in_array('status', $dirty, true) && $user->status === 'suspended') {
+                $user->tokens()->delete();
+            }
 
             if (isset($data['roles'])) {
                 if (in_array('Member', $data['roles'], true)) {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Plus, RotateCcw, Save, Trash2, Users } from 'lucide-react';
-import { Alert, Button, Can, ConfirmDialog, Icon, Input, Modal, PageHeader, PermissionMatrix, Select, Skeleton, Textarea } from '../../components/ui';
+import { Alert, Button, Can, ConfirmDialog, Icon, Input, LoadError, Modal, PageHeader, PermissionMatrix, Select, Skeleton, Textarea } from '../../components/ui';
 import { useDeleteRoleMutation, useRolesQuery, useSavePermissionMatrixMutation, useSaveRoleMutation } from '../../app/api';
 import { useDocumentTitle, usePermission, useToast } from '../../hooks';
 import { errorMessage, fieldErrors } from '../../lib/format';
@@ -11,7 +11,7 @@ export default function RolesPage() {
   useDocumentTitle('Roles & Permissions');
   const can = usePermission();
   const toast = useToast();
-  const { data, isLoading } = useRolesQuery();
+  const { data, isLoading, refetch } = useRolesQuery();
   const [saveMatrix, { isLoading: saving }] = useSavePermissionMatrixMutation();
   const [deleteRole, { isLoading: deleting }] = useDeleteRoleMutation();
   const roles = useMemo(() => data?.roles?.data ?? data?.roles ?? [], [data]);
@@ -77,6 +77,8 @@ export default function RolesPage() {
 
       {isLoading ? (
         <Skeleton className="h-[480px] rounded-lg" />
+      ) : !data ? (
+        <LoadError onRetry={refetch} />
       ) : (
         <PermissionMatrix groups={groups} roles={roles} value={draft} baseline={baseline} onChange={setDraft} readOnly={!can('roles.manage')} />
       )}

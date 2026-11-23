@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BookOpen, Plus, Radio, Send, Settings2, ShieldCheck, Smartphone, Trash2 } from 'lucide-react';
 import {
-  Alert, Button, Can, Card, ConfirmDialog, EmptyState, Icon, Input, Modal, PageHeader, Select, Skeleton,
+  Alert, Button, Can, Card, ConfirmDialog, EmptyState, Icon, Input, LoadError, Modal, PageHeader, Select, Skeleton,
   SlideOverDrawer, StatusBadge, Textarea, Toggle,
 } from '../../components/ui';
 import { CredentialFields, SettingFields } from './gateway/DriverFields';
@@ -16,7 +16,7 @@ export default function SmsGatewaysPage() {
   const can = usePermission();
   const canManage = can('gateways.sms.manage');
   const toast = useToast();
-  const { data, isLoading } = useSmsGatewaysQuery();
+  const { data, isLoading, refetch } = useSmsGatewaysQuery();
   const [save] = useSaveSmsGatewayMutation();
   const [setService, { isLoading: togglingService }] = useSetSmsServiceMutation();
   const [editing, setEditing] = useState(null);
@@ -101,7 +101,8 @@ export default function SmsGatewaysPage() {
               </div>
             </div>
           ))}
-          {!isLoading && !gateways.length && <div className="surface"><EmptyState icon={Smartphone} title="No SMS gateways" /></div>}
+          {!isLoading && !data && <LoadError onRetry={refetch} />}
+          {!isLoading && data && !gateways.length && <div className="surface"><EmptyState icon={Smartphone} title="No SMS gateways" /></div>}
           <p className="pt-2 text-xs text-slate-500">
             Message content is managed in <Link to="/admin/sms-templates" className="font-medium text-navy-800 underline underline-offset-2">SMS Templates</Link>; every attempt is recorded in <Link to="/admin/sms-logs" className="font-medium text-navy-800 underline underline-offset-2">Delivery Logs</Link>.
           </p>

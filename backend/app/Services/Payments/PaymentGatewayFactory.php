@@ -5,6 +5,7 @@ namespace App\Services\Payments;
 use App\Models\PaymentGateway;
 use App\Services\Payments\Contracts\PaymentGatewayDriver;
 use App\Services\Payments\Drivers\ManualTransferDriver;
+use App\Services\Payments\Drivers\OnePayDriver;
 use App\Services\Payments\Drivers\PayHereDriver;
 use App\Services\Payments\Drivers\StripeDriver;
 use App\Services\Payments\Drivers\WebXPayDriver;
@@ -14,6 +15,7 @@ class PaymentGatewayFactory
 {
     /** @var array<string, class-string<PaymentGatewayDriver>> */
     public const DRIVERS = [
+        'onepay' => OnePayDriver::class,
         'payhere' => PayHereDriver::class,
         'stripe' => StripeDriver::class,
         'webxpay' => WebXPayDriver::class,

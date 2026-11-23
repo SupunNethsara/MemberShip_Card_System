@@ -5,3 +5,15 @@
 .DS_Store
 Thumbs.db
 *.log
+
+# Deploy & temporary files
+deploy_package/
+*.zip
+*.sql
+.env
+.env.backup
+.env.production
+backend/vendor/
+backend/storage/*.key
+frontend/dist/
+frontend/node_modules/

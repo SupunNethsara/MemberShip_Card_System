@@ -1,19 +1,20 @@
 import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowUp, ImagePlus, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, ImagePlus, Lock, Pencil, Plus, Trash2 } from 'lucide-react';
 import {
-  Alert, Button, Can, ConfirmDialog, EmptyState, Icon, Input, MultilingualInput, Skeleton, SlideOverDrawer, StatusBadge, Toggle,
+  Alert, Button, Can, ConfirmDialog, EmptyState, Icon, Input, LoadError, MultilingualInput, Skeleton, SlideOverDrawer, StatusBadge, Toggle,
 } from '../../../components/ui';
+import { BUILT_IN_SLIDE } from '../../../components/home/HeroSlider';
 import { useDeleteHeroSlideMutation, useHeroSlidesQuery, useSaveHeroSlideMutation } from '../../../app/api';
 import { usePermission, useToast } from '../../../hooks';
 import { emptyTr, errorMessage, fieldErrors, tr } from '../../../lib/format';
 
-const DEFAULT_BG = '/images/hero-bg.jpg';
+const DEFAULT_BG = '/images/hero-gold-card.jpg';
 const plain = (v) => tr(v).replace(/\*(.+?)\*/g, '$1');
 
 export default function HeroSlidesEditor() {
   const can = usePermission();
   const toast = useToast();
-  const { data: slides = [], isLoading } = useHeroSlidesQuery();
+  const { data: slides = [], isLoading, isError, refetch } = useHeroSlidesQuery();
   const [save] = useSaveHeroSlideMutation();
   const [remove, { isLoading: removing }] = useDeleteHeroSlideMutation();
   const [editing, setEditing] = useState(null);
@@ -32,17 +33,31 @@ export default function HeroSlidesEditor() {
   return (
     <div>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-slate-500">Slides rotate every 7 seconds on the home page. Arrows and dots are hidden when only one slide is active.</p>
+        <p className="text-sm text-slate-500">Slide 1 is the gold-card banner, built into the site. Slides you add here show after it, from slide 2, rotating every 7 seconds.</p>
         <Can perform="cms.manage"><Button icon={Plus} onClick={() => setEditing({})}>Add slide</Button></Can>
       </div>
       <div className="space-y-3">
+        {/* Built-in slide 1: shown for reference, not editable here (it lives in the site code). */}
+        <div className="surface flex flex-col gap-4 overflow-hidden bg-slate-50/60 sm:flex-row sm:items-center">
+          <div className="h-28 shrink-0 bg-[#061433] bg-cover bg-right sm:w-56" style={{ backgroundImage: `url('${BUILT_IN_SLIDE.background_url}')` }} />
+          <div className="min-w-0 flex-1 px-4 pb-4 sm:px-0 sm:pb-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-2xs font-semibold tabular-nums text-slate-400">#1</span>
+              <span className="inline-flex items-center gap-1 rounded bg-slate-200/70 px-1.5 py-0.5 text-2xs font-medium text-slate-600"><Icon icon={Lock} size={10} /> Built in</span>
+            </div>
+            <p className="mt-1.5 line-clamp-1 font-medium text-navy-900">{plain(BUILT_IN_SLIDE.title)}</p>
+            <p className="line-clamp-1 text-xs text-slate-500">Always shown first, even if the server can't be reached.</p>
+          </div>
+        </div>
+
         {isLoading && [0, 1].map((i) => <Skeleton key={i} className="h-28 rounded-lg" />)}
+        {isError && !isLoading && <LoadError compact onRetry={refetch} />}
         {slides.map((s, i) => (
           <div key={s.id} className="surface flex flex-col gap-4 overflow-hidden sm:flex-row sm:items-center">
             <div className="h-28 shrink-0 bg-[#061433] bg-cover bg-right sm:w-56" style={{ backgroundImage: `url('${s.background_url || DEFAULT_BG}')` }} />
             <div className="min-w-0 flex-1 px-4 pb-4 sm:px-0 sm:pb-0">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-2xs font-semibold tabular-nums text-slate-400">#{i + 1}</span>
+                <span className="text-2xs font-semibold tabular-nums text-slate-400">#{i + 2}</span>
                 <StatusBadge status={s.is_active ? 'active' : 'inactive'} />
                 {['en', 'si', 'ta'].map((l) => (
                   <span key={l} className={`rounded px-1.5 py-0.5 text-2xs font-medium ${s.title?.[l] ? 'bg-emerald-50 text-emerald-700' : 'bg-amber-50 text-amber-700'}`}>{l.toUpperCase()}</span>
@@ -62,8 +77,8 @@ export default function HeroSlidesEditor() {
             )}
           </div>
         ))}
-        {!isLoading && !slides.length && (
-          <div className="surface"><EmptyState title="No slides yet" description="Without slides, the hero falls back to the Homepage hero text in Page content." /></div>
+        {!isLoading && !isError && !slides.length && (
+          <div className="surface"><EmptyState title="No extra slides" description="Only the built-in slide is showing. Add a slide to show it as slide 2." /></div>
         )}
       </div>
       <SlideDrawer slide={editing} nextOrder={slides.length} onClose={() => setEditing(null)} />

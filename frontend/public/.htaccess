@@ -1,0 +1,37 @@
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php82 .php
+</IfModule>
+
+# Disable LiteSpeed Cache and SpeedyCache for this portal subdomain
+<IfModule LiteSpeed>
+  CacheLookup off
+</IfModule>
+<IfModule mod_headers.c>
+  Header set X-LiteSpeed-Cache-Control "no-cache"
+  Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
+  Header set Pragma "no-cache"
+  Header set Expires "0"
+</IfModule>
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+
+  # Bypass caching
+  RewriteRule .* - [E=Cache-Control:no-cache]
+
+  # Pass Authorization header to PHP
+  RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+  # Forward any request starting with /api/ to api.php
+  RewriteCond %{REQUEST_URI} ^/api(/.*)?$
+  RewriteRule ^api(?:/.*)?$ api.php [L,QSA]
+
+  # Existing files and directories serve directly
+  RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d
+  RewriteRule ^ - [L]
+
+  # All other requests serve the SPA index.html
+  RewriteRule ^ index.html [L]
+</IfModule>

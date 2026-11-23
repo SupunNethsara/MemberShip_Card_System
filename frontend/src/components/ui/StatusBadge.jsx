@@ -15,12 +15,14 @@ const DOTS = { emerald: 'bg-emerald-500', amber: 'bg-amber-500', rose: 'bg-rose-
 const STATUS_TONE = {
   active: 'emerald', paid: 'emerald', sent: 'emerald', success: 'emerald', live: 'emerald', enabled: 'emerald', valid: 'emerald',
   printed: 'sky', issued: 'emerald',
+  new: 'sky', in_progress: 'amber', resolved: 'emerald',
   pending: 'amber', awaiting_approval: 'amber', expiring: 'amber', sandbox: 'amber', initiated: 'amber',
   failed: 'rose', expired: 'rose', cancelled: 'rose', suspended: 'rose', invalid_signature: 'rose', refunded: 'slate', inactive: 'slate', disabled: 'slate',
 };
 
 const LABELS = {
   awaiting_approval: 'Awaiting approval',
+  in_progress: 'In progress',
   invalid_signature: 'Invalid signature',
 };
 

@@ -15,7 +15,7 @@ export default function BillingPage() {
   const [state, setState] = useState({ page: 1, per_page: 10 });
   const [slipFor, setSlipFor] = useState(null);
   const [downloading, setDownloading] = useState(null);
-  const { data, isLoading, isFetching } = useMemberInvoicesQuery(state);
+  const { data, isLoading, isFetching, refetch } = useMemberInvoicesQuery(state);
 
   const download = async (inv) => {
     setDownloading(inv.id);
@@ -54,6 +54,7 @@ export default function BillingPage() {
       <DataTable
         columns={columns}
         data={data}
+        onRetry={refetch}
         loading={isLoading}
         fetching={isFetching}
         state={state}

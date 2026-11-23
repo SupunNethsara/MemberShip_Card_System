@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { MessageSquareText, Save } from 'lucide-react';
-import { Alert, Button, Can, Card, Icon, PageHeader, Skeleton, StatusBadge, Toggle } from '../../components/ui';
+import { Alert, Button, Can, Card, Icon, LoadError, PageHeader, Skeleton, StatusBadge, Toggle } from '../../components/ui';
 import { useSaveSmsTemplateMutation, useSmsTemplatesQuery } from '../../app/api';
 import { useDocumentTitle, usePermission, useToast } from '../../hooks';
 import { errorMessage, fieldErrors, relative } from '../../lib/format';
@@ -25,7 +25,7 @@ const segments = (text) => {
 export default function SmsTemplatesPage() {
   useDocumentTitle('SMS Templates');
   const can = usePermission();
-  const { data, isLoading } = useSmsTemplatesQuery();
+  const { data, isLoading, refetch } = useSmsTemplatesQuery();
   const [activeId, setActiveId] = useState(null);
   const templates = data?.data || [];
   const variables = data?.variables || [];
@@ -37,6 +37,7 @@ export default function SmsTemplatesPage() {
       <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
         <nav className="surface h-fit overflow-hidden">
           {isLoading && <div className="space-y-2 p-3">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="h-10" />)}</div>}
+          {!isLoading && !data && <LoadError compact tone="plain" onRetry={refetch} />}
           <ul className="divide-y divide-slate-100">
             {templates.map((t) => (
               <li key={t.id}>
