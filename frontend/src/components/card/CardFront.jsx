@@ -77,7 +77,9 @@ export default function CardFront({
 }) {
   const u = makeUnit(unit);
   const gid = useId().replace(/:/g, '');
-  const art = cardArtFor(tierSlug, tierName);
+  const effectiveSlug = tierSlug || 'silver';
+  const effectiveName = tierName || 'Silver';
+  const art = cardArtFor(effectiveSlug, effectiveName);
   if (art) {
     // Client artwork tiers (Silver / Gold / Platinum): name, NIC and QR move to the card back.
     return <ArtworkCardFront unit={unit} art={art} memberCode={memberCode} expiresAt={expiresAt} active={active} inactiveLabel={labels.inactive || 'Inactive'} />;

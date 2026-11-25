@@ -11,11 +11,19 @@
   Header set Cache-Control "no-store, no-cache, must-revalidate, max-age=0"
   Header set Pragma "no-cache"
   Header set Expires "0"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
 
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # Force HTTPS
+  RewriteCond %{HTTPS} !=on
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
 
   # Bypass caching
   RewriteRule .* - [E=Cache-Control:no-cache]

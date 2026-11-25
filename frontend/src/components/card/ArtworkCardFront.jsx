@@ -72,7 +72,7 @@ export default function ArtworkCardFront({ unit = 'mm', art, memberCode, expires
       }}
     >
       <svg viewBox="0 0 856 540" preserveAspectRatio="none" style={{ display: 'block', width: '100%', height: '100%' }} role="img" aria-label={`Membership card ${code}`}>
-        <image href={art} x="0" y="0" width="856" height="540" preserveAspectRatio="none" style={{ filter: active ? undefined : 'grayscale(1) brightness(0.75)' }} />
+        <image href={art} x="0" y="0" width="856" height="540" preserveAspectRatio="none" style={{ filter: active ? undefined : 'saturate(0.75) brightness(0.88)' }} />
         <g fill="#ffffff" fontFamily={font} fontWeight="500" style={{ fontVariantNumeric: 'tabular-nums' }}>
           <text x={CODE_X} y="466.5" fontSize={codeSize} letterSpacing={CODE_LETTER_SPACING} xmlSpace="preserve">{code}</text>
           <text x="423.5" y="466.5" fontSize="41" letterSpacing="1.2" fill={active ? '#ffffff' : '#fecaca'}>{mmYY(expiresAt)}</text>

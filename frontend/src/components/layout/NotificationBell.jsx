@@ -54,9 +54,9 @@ export default function NotificationBell() {
   const user = useSelector((s) => s.auth.user);
   const token = useSelector((s) => s.auth.token);
 
-  // Poll every 30s as a resilient fallback if WebSockets is momentarily offline
+  // Poll every 10s as a resilient real-time fallback in production environments
   const { data, refetch } = useNotificationsQuery(undefined, {
-    pollingInterval: 30000,
+    pollingInterval: 10000,
     skip: !token,
   });
 

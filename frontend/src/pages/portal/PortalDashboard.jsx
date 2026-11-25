@@ -43,6 +43,9 @@ export default function PortalDashboard() {
   const card = data?.card;
   const active = m?.status === 'active';
   const higher = tiers.filter((x) => m?.tier && x.priority > m.tier.priority);
+  const currentTierSlug = m?.tier?.slug || data?.history?.[0]?.tier?.slug || 'silver';
+  const currentTierName = m ? tr(m.tier?.name) : (data?.history?.[0]?.tier?.name ? tr(data.history[0].tier.name) : 'Silver');
+  const currentTierColor = m?.tier?.color || data?.history?.[0]?.tier?.color || '#94a3b8';
 
   return (
     <div className="space-y-6">
@@ -64,17 +67,29 @@ export default function PortalDashboard() {
             <MembershipCard
               name={card?.name}
               memberCode={card?.member_code}
-              tierSlug={m?.tier?.slug}
-              tierName={m ? tr(m.tier?.name) : '—'}
-              tierColor={m?.tier?.color}
+              tierSlug={currentTierSlug}
+              tierName={currentTierName}
+              tierColor={currentTierColor}
               expiresAt={m?.expires_at}
+              memberSince={card?.member_since}
               verifyUrl={card?.verify_url}
               status={active ? 'active' : 'inactive'}
               brandSi={content?.content?.['brand.name']?.si || 'ජීවනසවිය'}
               brandEn={(content?.content?.['brand.name']?.en || 'Jeewanasaviya').toUpperCase()}
               logoUrl={content?.settings?.logo_url}
+              contactPhone={content?.settings?.contact_phone}
+              contactEmail={content?.settings?.contact_email}
               locale={locale}
-              labels={{ member: t('portal.member'), memberId: t('portal.memberId'), validUntil: t('portal.validUntil'), expired: t('status.expired') }}
+              labels={{
+                member: t('portal.member'),
+                memberId: t('portal.memberId'),
+                validUntil: t('portal.validUntil'),
+                expired: t('status.expired'),
+                front: t('portal.cardFront', 'Front'),
+                back: t('portal.cardBack', 'Back (QR Code)'),
+                both: t('portal.cardBoth', 'Both sides'),
+                scanToVerify: t('portal.scanToVerify', 'Scan to verify'),
+              }}
             />
           </div>
           <p className="text-center text-xs text-slate-500">{t('portal.scanHint')}</p>
@@ -82,9 +97,9 @@ export default function PortalDashboard() {
           <PrintableCard
             name={card?.name}
             memberCode={card?.member_code}
-            tierSlug={m?.tier?.slug}
-            tierName={m ? tr(m.tier?.name) : ''}
-            tierColor={m?.tier?.color}
+            tierSlug={currentTierSlug}
+            tierName={currentTierName}
+            tierColor={currentTierColor}
             expiresAt={m?.expires_at}
             memberSince={card?.member_since}
             verifyUrl={card?.verify_url}

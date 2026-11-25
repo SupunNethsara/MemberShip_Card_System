@@ -35,7 +35,8 @@ class OtpDelivery
     {
         if ($this->smsReady()) {
             $log = $this->sms->send($phone, $smsMessage, $event, $user, null, $locale);
-            if ($log?->status === 'sent' || ! $email) {
+            $sentViaRealGateway = $log?->status === 'sent' && $log?->gateway?->driver !== 'log';
+            if ($sentViaRealGateway || ! $email) {
                 return ['channel' => 'sms', 'destination' => self::maskPhone($phone)];
             }
         }
