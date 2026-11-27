@@ -64,8 +64,35 @@ class GatewayController extends Controller
     {
         Gate::authorize('viewAny', SmsGateway::class);
 
-        return SmsGatewayResource::collection(SmsGateway::query()->orderByDesc('is_primary')->orderByDesc('is_fallback')->orderBy('id')->get())
-            ->additional(['drivers' => SmsGatewayFactory::definitions(), 'enabled' => $sms->enabled()]);
+        $gateways = SmsGateway::query()->orderByDesc('is_primary')->orderByDesc('is_fallback')->orderBy('id')->get();
+        $totalCapacity = 0;
+        $totalRemaining = 0;
+        $hasAnyQuota = false;
+        foreach ($gateways as $g) {
+            $u = $g->computeUsage();
+            if ($u['has_quota'] && $g->is_active) {
+                $hasAnyQuota = true;
+                $totalCapacity += $u['quota_capacity'];
+                $totalRemaining += $u['remaining_capacity'];
+            }
+        }
+
+        $sentThisMonth = \App\Models\SmsLog::query()->where('status', 'sent')->where('created_at', '>=', now()->startOfMonth())->count();
+        $failedThisMonth = \App\Models\SmsLog::query()->where('status', 'failed')->where('created_at', '>=', now()->startOfMonth())->count();
+
+        return SmsGatewayResource::collection($gateways)
+            ->additional([
+                'drivers' => SmsGatewayFactory::definitions(),
+                'enabled' => $sms->enabled(),
+                'summary' => [
+                    'has_quota' => $hasAnyQuota,
+                    'total_capacity' => $hasAnyQuota ? $totalCapacity : null,
+                    'total_remaining' => $hasAnyQuota ? $totalRemaining : null,
+                    'sent_this_month' => $sentThisMonth,
+                    'failed_this_month' => $failedThisMonth,
+                    'active_count' => $gateways->where('is_active', true)->count(),
+                ],
+            ]);
     }
 
     public function smsStore(SmsGatewayRequest $request): SmsGatewayResource

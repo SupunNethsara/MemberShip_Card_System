@@ -23,6 +23,7 @@ class SmsGatewayResource extends JsonResource
             'is_fallback' => $this->is_fallback,
             'sender_id' => $this->sender_id,
             'settings' => (object) ($this->settings ?? []),
+            'usage' => $this->computeUsage(),
             'credentials' => (object) $this->maskedCredentials(),
             'configured_keys' => array_keys(array_filter($this->credentials(), fn ($v) => $v !== '' && $v !== null)),
             'updated_at' => $this->updated_at?->toIso8601String(),
