@@ -268,6 +268,34 @@ export const PAYMENT_GUIDES = {
 
 export const SMS_GUIDES = {
   en: {
+    smslenz: {
+      title: 'SMSLenz (smslenz.lk - Sri Lanka Bulk SMS & OTP)',
+      portalUrl: 'https://smslenz.lk',
+      portalName: 'SMSLenz Portal',
+      steps: [
+        {
+          title: '1. Create Account & Purchase Credits',
+          desc: 'Register at smslenz.lk and activate your account or reload SMS credits via card or bank transfer.',
+        },
+        {
+          title: '2. Request Approved Sender ID (Mask)',
+          desc: 'Go to Sender IDs in your SMSLenz portal and request your business sender mask (e.g. JEEWANASV). While waiting for approval, you can test with "SMSlenzDEMO".',
+        },
+        {
+          title: '3. Obtain User ID and API Key',
+          desc: 'Go to Settings → API Key (https://smslenz.lk/account/api-key). Copy your User ID and generate/copy your API Key.',
+        },
+        {
+          title: '4. Enter Credentials & Configure Capacity',
+          desc: 'Enter your Sender ID, User ID, and API Key in this drawer. You can also configure your package capacity (SMS credits) and validity duration in months.',
+        },
+        {
+          title: '5. Test & Set Primary',
+          desc: 'Turn Active to ON and Save. Set SMSLenz as Primary. Use the "Send test SMS" widget to verify delivery on your phone.',
+        },
+      ],
+      tip: 'SMSLenz provides instant SMS delivery across Dialog, Mobitel, Hutch, Airtel, and SLT, supporting Sinhala/Tamil Unicode.',
+    },
     notifylk: {
       title: 'Notify.lk (Sri Lanka Bulk SMS)',
       portalUrl: 'https://app.notify.lk',
@@ -378,6 +406,34 @@ export const SMS_GUIDES = {
     },
   },
   si: {
+    smslenz: {
+      title: 'SMSLenz (smslenz.lk - ශ්‍රී ලංකා Bulk SMS & OTP Gateway)',
+      portalUrl: 'https://smslenz.lk',
+      portalName: 'SMSLenz Portal',
+      steps: [
+        {
+          title: '1. ගිණුමක් සාදා Credits මිලදී ගැනීම',
+          desc: 'smslenz.lk හි ලියාපදිංචි වී card හෝ bank transfer මගින් SMS credits පැකේජයක් මිලදී ගන්න.',
+        },
+        {
+          title: '2. අනුමත Sender ID (Mask) එකක් ලබාගැනීම',
+          desc: 'SMSLenz dashboard එකේ Sender IDs වෙත ගොස් ඔබගේ ආයතනික Mask එක ඉල්ලුම් කරන්න. එය අනුමත වන තුරු පරීක්ෂා කිරීමට "SMSlenzDEMO" භාවිතා කළ හැක.',
+        },
+        {
+          title: '3. User ID සහ API Key ලබාගැනීම',
+          desc: 'Settings → API Key (https://smslenz.lk/account/api-key) වෙත ගොස් ඔබගේ User ID සහ API Key එක copy කරගන්න.',
+        },
+        {
+          title: '4. තොරතුරු සහ Package ධාරිතාව ඇතුළත් කිරීම',
+          desc: 'ඔබගේ Sender ID, User ID, සහ API Key මෙහි ඇතුළත් කරන්න. මිලදී ගත් පැකේජයේ SMS ධාරිතාවය සහ වලංගු මාස ගණනද සටහන් කළ හැක.',
+        },
+        {
+          title: '5. පරීක්ෂා කර Primary ලෙස සැකසීම',
+          desc: 'Active ටොගල් එක ON කර Save කරන්න. ඉන්පසු "Send test SMS" මගින් පරීක්ෂා කර SMSLenz Gateway එක Primary ලෙස තෝරන්න.',
+        },
+      ],
+      tip: 'SMSLenz මගින් Dialog, Mobitel, Hutch ඇතුළු සියලුම දේශීය ජාල වෙත ක්ෂණිකව OTP සහ දැනුම්දීම් යැවිය හැක.',
+    },
     notifylk: {
       title: 'Notify.lk (ශ්‍රී ලංකා Bulk SMS)',
       portalUrl: 'https://app.notify.lk',
@@ -678,7 +734,7 @@ export function GatewayHelpModal({ open, onClose, defaultType = 'payment' }) {
                 : 'text-slate-600 hover:text-navy-900'
             }`}
           >
-            {lang === 'si' ? 'SMS Gateways (Notify.lk, Dialog, ආදිය)' : 'SMS Gateways (Notify.lk, Dialog, etc.)'}
+            {lang === 'si' ? 'SMS Gateways (SMSLenz, Notify.lk, Dialog, ආදිය)' : 'SMS Gateways (SMSLenz, Notify.lk, Dialog, etc.)'}
           </button>
         </div>
 

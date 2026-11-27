@@ -10,6 +10,7 @@ use App\Services\Sms\Drivers\HutchDriver;
 use App\Services\Sms\Drivers\LogDriver;
 use App\Services\Sms\Drivers\MobitelDriver;
 use App\Services\Sms\Drivers\NotifyLkDriver;
+use App\Services\Sms\Drivers\SmsLenzDriver;
 use App\Services\Sms\Drivers\TwilioDriver;
 use InvalidArgumentException;
 
@@ -17,6 +18,7 @@ class SmsGatewayFactory
 {
     /** @var array<string, class-string<SmsDriver>> */
     public const DRIVERS = [
+        'smslenz' => SmsLenzDriver::class,
         'notifylk' => NotifyLkDriver::class,
         'dialog' => DialogEsmsDriver::class,
         'mobitel' => MobitelDriver::class,
