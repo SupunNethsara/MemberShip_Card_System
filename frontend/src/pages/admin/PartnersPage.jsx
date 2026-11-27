@@ -2,12 +2,12 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, ImagePlus, MapPin, Pencil, Plus, Tags, Trash2, X } from 'lucide-react';
 import {
-  Alert, Button, Can, ConfirmDialog, DataTable, Icon, Input, Modal, MultilingualInput, PageHeader, Select,
+  Alert, Button, Can, Checkbox, ConfirmDialog, DataTable, Icon, Input, Modal, MultilingualInput, PageHeader, Select,
   SlideOverDrawer, StatusBadge, Toggle,
 } from '../../components/ui';
 import CategoryIcon, { CATEGORY_ICONS } from '../../components/public/CategoryIcon';
 import {
-  useCategoriesQuery, useDeleteCategoryMutation, useDeletePartnerMutation, usePartnerQuery, usePartnersQuery,
+  useBulkDeletePartnersMutation, useCategoriesQuery, useDeleteCategoryMutation, useDeletePartnerMutation, usePartnerQuery, usePartnersQuery,
   useSaveCategoryMutation, useSavePartnerMutation,
 } from '../../app/api';
 import { useDocumentTitle, usePermission, useTableState, useToast } from '../../hooks';
@@ -16,13 +16,41 @@ import { emptyTr, errorMessage, fieldErrors, tr } from '../../lib/format';
 export default function PartnersPage() {
   useDocumentTitle('Partner Businesses');
   const can = usePermission();
+  const toast = useToast();
   const [params, update, raw] = useTableState();
   const { data, isLoading, isFetching, refetch } = usePartnersQuery(params);
   const { data: cats } = useCategoriesQuery();
+  const [bulkDeletePartners, { isLoading: deletingBulk }] = useBulkDeletePartnersMutation();
+  const [checkedIds, setCheckedIds] = useState(() => new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [editingId, setEditingId] = useState(null); // number | 'new' | null
   const [catsOpen, setCatsOpen] = useState(false);
 
+  const rows = data?.data ?? [];
+  const pageIds = rows.map((r) => r.id);
+  const allOnPage = pageIds.length > 0 && pageIds.every((id) => checkedIds.has(id));
+  const someOnPage = pageIds.some((id) => checkedIds.has(id));
+
+  const toggle = (id) => setCheckedIds((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const togglePage = () => setCheckedIds((s) => { const n = new Set(s); allOnPage ? pageIds.forEach((id) => n.delete(id)) : pageIds.forEach((id) => n.add(id)); return n; });
+
+  const confirmBulkDelete = async () => {
+    try {
+      const res = await bulkDeletePartners([...checkedIds]).unwrap();
+      toast(res.message || 'Partners deleted successfully');
+      setCheckedIds(new Set());
+      setBulkDeleteOpen(false);
+    } catch (e) {
+      toast(errorMessage(e), 'error');
+    }
+  };
+
   const columns = [
+    {
+      key: 'select', width: 44,
+      header: <Checkbox size="sm" checked={allOnPage} indeterminate={!allOnPage && someOnPage} onChange={togglePage} title="Select all on this page" />,
+      render: (r) => <div onClick={(e) => e.stopPropagation()}><Checkbox size="sm" checked={checkedIds.has(r.id)} onChange={() => toggle(r.id)} /></div>,
+    },
     {
       key: 'name', header: 'Partner', sortable: true,
       render: (r) => (
@@ -56,6 +84,21 @@ export default function PartnersPage() {
           </Can>
         }
       />
+
+      {checkedIds.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-navy-200 bg-navy-50 px-4 py-2.5">
+          <span className="text-sm font-medium text-navy-900"><span className="tabular-nums">{checkedIds.size}</span> partner(s) selected</span>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Can perform="partners.manage">
+              <Button size="sm" variant="danger" icon={Trash2} onClick={() => setBulkDeleteOpen(true)}>
+                Delete selected ({checkedIds.size})
+              </Button>
+            </Can>
+            <Button size="sm" variant="ghost" icon={X} onClick={() => setCheckedIds(new Set())}>Clear</Button>
+          </div>
+        </div>
+      )}
+
       <DataTable
         columns={columns}
         data={data}
@@ -74,6 +117,15 @@ export default function PartnersPage() {
       />
       <PartnerDrawer id={editingId} onClose={() => setEditingId(null)} categories={cats?.data || []} />
       <CategoriesModal open={catsOpen} onClose={() => setCatsOpen(false)} categories={cats?.data || []} />
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onClose={() => setBulkDeleteOpen(false)}
+        title={`Delete ${checkedIds.size} partner business${checkedIds.size > 1 ? 'es' : ''}?`}
+        description={`This will permanently delete the selected ${checkedIds.size} partner(s), along with all their branches and associated discount offers.`}
+        confirmLabel={`Delete ${checkedIds.size} partner${checkedIds.size > 1 ? 's' : ''}`}
+        loading={deletingBulk}
+        onConfirm={confirmBulkDelete}
+      />
     </div>
   );
 }

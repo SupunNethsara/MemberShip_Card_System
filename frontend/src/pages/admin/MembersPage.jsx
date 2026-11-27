@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Ban, CheckCircle2, IdCard, Pencil, Plus, ShieldAlert, Trash2, UserPlus } from 'lucide-react';
+import { Ban, CheckCircle2, Database, IdCard, Pencil, Plus, ShieldAlert, Trash2, UserPlus, X } from 'lucide-react';
 import CardPrintModal from './cards/CardPrintModal';
+import DemoDataManagerModal from './dashboard/DemoDataManagerModal';
 import {
   Alert, Avatar, Button, Can, Card, Checkbox, ConfirmDialog, DataTable, DescriptionList, Input, Modal, PageHeader,
   Select, SlideOverDrawer, StatusBadge, Tabs, Textarea, TierBadge, Toggle,
 } from '../../components/ui';
 import {
-  useCreateMemberMutation, useDeleteMemberMutation, useMemberQuery, useMembersQuery, useOverrideMembershipMutation,
+  useBulkDeleteMembersMutation, useCreateMemberMutation, useDeleteMemberMutation, useMemberQuery, useMembersQuery, useOverrideMembershipMutation,
   useTiersQuery, useUpdateMemberMutation,
 } from '../../app/api';
 import { useDocumentTitle, useTableState, useToast } from '../../hooks';
@@ -14,13 +15,42 @@ import { date, dateTime, errorMessage, fieldErrors, money, relative, tr } from '
 
 export default function MembersPage() {
   useDocumentTitle('Members');
+  const toast = useToast();
   const [params, update, raw] = useTableState({ sort: 'created_at', direction: 'desc' });
   const { data, isLoading, isFetching, refetch } = useMembersQuery(params);
   const { data: tiers } = useTiersQuery({ per_page: 100 });
-  const [selected, setSelected] = useState(null);
+  const [bulkDeleteMembers, { isLoading: deletingBulk }] = useBulkDeleteMembersMutation();
+  const [drawerId, setDrawerId] = useState(null);
+  const [checkedIds, setCheckedIds] = useState(() => new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [demoModalOpen, setDemoModalOpen] = useState(false);
   const [creating, setCreating] = useState(false);
 
+  const rows = data?.data ?? [];
+  const pageIds = rows.map((r) => r.id);
+  const allOnPage = pageIds.length > 0 && pageIds.every((id) => checkedIds.has(id));
+  const someOnPage = pageIds.some((id) => checkedIds.has(id));
+
+  const toggle = (id) => setCheckedIds((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const togglePage = () => setCheckedIds((s) => { const n = new Set(s); allOnPage ? pageIds.forEach((id) => n.delete(id)) : pageIds.forEach((id) => n.add(id)); return n; });
+
+  const confirmBulkDelete = async () => {
+    try {
+      const res = await bulkDeleteMembers([...checkedIds]).unwrap();
+      toast(res.message || 'Members deleted successfully');
+      setCheckedIds(new Set());
+      setBulkDeleteOpen(false);
+    } catch (e) {
+      toast(errorMessage(e), 'error');
+    }
+  };
+
   const columns = [
+    {
+      key: 'select', width: 44,
+      header: <Checkbox size="sm" checked={allOnPage} indeterminate={!allOnPage && someOnPage} onChange={togglePage} title="Select all on this page" />,
+      render: (r) => <div onClick={(e) => e.stopPropagation()}><Checkbox size="sm" checked={checkedIds.has(r.id)} onChange={() => toggle(r.id)} /></div>,
+    },
     {
       key: 'name', header: 'Member', sortable: true,
       render: (r) => (
@@ -69,8 +99,28 @@ export default function MembersPage() {
       <PageHeader
         title="Members"
         description="Search, filter and manage card holders. Click a row for details and manual membership overrides."
-        actions={<Can perform="members.create"><Button icon={UserPlus} onClick={() => setCreating(true)}>Add member</Button></Can>}
+        actions={
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" icon={Database} onClick={() => setDemoModalOpen(true)}>Manage sample data</Button>
+            <Can perform="members.create"><Button icon={UserPlus} onClick={() => setCreating(true)}>Add member</Button></Can>
+          </div>
+        }
       />
+
+      {checkedIds.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-navy-200 bg-navy-50 px-4 py-2.5">
+          <span className="text-sm font-medium text-navy-900"><span className="tabular-nums">{checkedIds.size}</span> member(s) selected</span>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Can perform="members.delete">
+              <Button size="sm" variant="danger" icon={Trash2} onClick={() => setBulkDeleteOpen(true)}>
+                Delete selected ({checkedIds.size})
+              </Button>
+            </Can>
+            <Button size="sm" variant="ghost" icon={X} onClick={() => setCheckedIds(new Set())}>Clear</Button>
+          </div>
+        </div>
+      )}
+
       <DataTable
         columns={columns}
         data={data}
@@ -79,7 +129,7 @@ export default function MembersPage() {
         fetching={isFetching}
         state={raw}
         onChange={update}
-        onRowClick={(r) => setSelected(r.id)}
+        onRowClick={(r) => setDrawerId(r.id)}
         searchPlaceholder="Name, email, mobile, member ID…"
         filters={[
           { key: 'status', label: 'Status', options: [
@@ -87,11 +137,25 @@ export default function MembersPage() {
             { value: 'no_plan', label: 'No plan' }, { value: 'suspended', label: 'Suspended' },
           ] },
           { key: 'tier_id', label: 'Tier', options: (tiers?.data || []).map((t) => ({ value: t.id, label: tr(t.name) })) },
+          { key: 'sample', label: 'Data type', options: [
+            { value: 'real', label: 'Real members only' },
+            { value: 'only', label: 'Sample members only' },
+          ] },
         ]}
         emptyTitle="No members found"
       />
-      <MemberDrawer id={selected} onClose={() => setSelected(null)} tiers={tiers?.data || []} />
+      <MemberDrawer id={drawerId} onClose={() => setDrawerId(null)} tiers={tiers?.data || []} />
       <CreateMemberModal open={creating} onClose={() => setCreating(false)} />
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onClose={() => setBulkDeleteOpen(false)}
+        title={`Delete ${checkedIds.size} member${checkedIds.size > 1 ? 's' : ''}?`}
+        description={`This will permanently remove the selected ${checkedIds.size} member account(s), including associated cards, invoices, and membership records. Staff accounts will not be affected.`}
+        confirmLabel={`Delete ${checkedIds.size} member${checkedIds.size > 1 ? 's' : ''}`}
+        loading={deletingBulk}
+        onConfirm={confirmBulkDelete}
+      />
+      <DemoDataManagerModal open={demoModalOpen} onClose={() => setDemoModalOpen(false)} />
     </div>
   );
 }

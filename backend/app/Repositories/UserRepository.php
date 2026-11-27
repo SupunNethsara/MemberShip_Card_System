@@ -41,6 +41,14 @@ class UserRepository extends BaseRepository
             if (! empty($params['tier_id'])) {
                 $q->whereHas('memberships', fn ($m) => $m->where('membership_tier_id', $params['tier_id'])->where('status', 'active')->where('expires_at', '>', now()));
             }
+
+            if (! empty($params['sample'])) {
+                if ($params['sample'] === 'real' || $params['sample'] === 'hide') {
+                    $q->where('email', 'not like', '%@example.lk')->where('email', '!=', 'member@portal.lk');
+                } elseif ($params['sample'] === 'only' || $params['sample'] === 'demo') {
+                    $q->where(fn ($sub) => $sub->where('email', 'like', '%@example.lk')->orWhere('email', 'member@portal.lk'));
+                }
+            }
         });
     }
 

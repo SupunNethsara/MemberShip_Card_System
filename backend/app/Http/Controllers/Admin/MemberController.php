@@ -68,6 +68,34 @@ class MemberController extends Controller
         return response()->json(['message' => 'Member deleted']);
     }
 
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $ids = $request->input('ids');
+        $currentUserId = $request->user()->id;
+
+        $members = User::query()
+            ->whereIn('id', $ids)
+            ->where('is_staff', false)
+            ->where('id', '!=', $currentUserId)
+            ->get();
+
+        $count = 0;
+        foreach ($members as $member) {
+            $this->users->delete($member, $request->user());
+            $count++;
+        }
+
+        return response()->json([
+            'message' => "Successfully deleted {$count} member(s)",
+            'deleted_count' => $count,
+        ]);
+    }
+
     public function override(MembershipOverrideRequest $request, User $member): JsonResponse
     {
         Gate::authorize('override', $member);

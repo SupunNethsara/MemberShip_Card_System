@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Building2, CalendarClock, MessageSquare, Users, Wallet } from 'lucide-react';
+import { ArrowRight, Building2, CalendarClock, Database, MessageSquare, Users, Wallet } from 'lucide-react';
 import { Alert, Button, Card, LoadError, PageHeader, Skeleton, StatCard, TierBadge } from '../../components/ui';
 import { BarChart, DistributionBars, LineChart } from '../../components/charts/Charts';
+import DemoDataManagerModal from './dashboard/DemoDataManagerModal';
 import { useAdminDashboardQuery } from '../../app/api';
 import { useCurrentUser, useDocumentTitle } from '../../hooks';
 import { compactMoney, money, number, relative } from '../../lib/format';
@@ -9,6 +11,7 @@ import { compactMoney, money, number, relative } from '../../lib/format';
 export default function DashboardPage() {
   useDocumentTitle('Dashboard');
   const user = useCurrentUser();
+  const [demoModalOpen, setDemoModalOpen] = useState(false);
   const { data, isLoading, isError, refetch } = useAdminDashboardQuery(undefined, { pollingInterval: 60000 });
   const k = data?.kpis || {};
   const series = data?.revenue_series || [];
@@ -25,7 +28,16 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader eyebrow={new Date().toLocaleDateString('en-LK', { weekday: 'long', day: 'numeric', month: 'long' })} title={`Good ${greeting()}, ${user?.name?.split(' ')[0] ?? ''}`} description="Live overview of members, revenue and partner activity." />
+      <PageHeader
+        eyebrow={new Date().toLocaleDateString('en-LK', { weekday: 'long', day: 'numeric', month: 'long' })}
+        title={`Good ${greeting()}, ${user?.name?.split(' ')[0] ?? ''}`}
+        description="Live overview of members, revenue and partner activity."
+        actions={
+          <Button variant="secondary" icon={Database} onClick={() => setDemoModalOpen(true)}>
+            Manage sample data
+          </Button>
+        }
+      />
 
       {k.pending_approvals > 0 && (
         <Alert tone="warning" title={`${k.pending_approvals} bank transfer${k.pending_approvals > 1 ? 's' : ''} awaiting approval`} action={<Link to="/admin/invoices?status=awaiting_approval"><Button size="sm" variant="secondary" iconRight={ArrowRight}>Review</Button></Link>}>
@@ -72,6 +84,8 @@ export default function DashboardPage() {
           </ul>
         </Card>
       </div>
+
+      <DemoDataManagerModal open={demoModalOpen} onClose={() => setDemoModalOpen(false)} />
     </div>
   );
 }

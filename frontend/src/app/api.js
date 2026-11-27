@@ -47,6 +47,11 @@ export const api = baseApi.injectEndpoints({
 
     // ── Admin: dashboard & audit ──────────────────────────
     adminDashboard: b.query({ query: () => '/admin/dashboard', providesTags: ['Dashboard'] }),
+    demoDataSummary: b.query({ query: () => '/admin/dashboard/demo-data-summary', providesTags: ['Member', 'Partner', 'Offer', 'Dashboard'] }),
+    cleanDemoData: b.mutation({
+      query: (body) => ({ url: '/admin/dashboard/clean-demo-data', method: 'POST', body }),
+      invalidatesTags: ['Member', 'Partner', 'Offer', 'Dashboard', 'Audit'],
+    }),
     auditLogs: b.query({ query: (p) => `/admin/audit-logs${qs(p)}`, providesTags: ['Audit'] }),
 
     // ── Admin: members ────────────────────────────────────
@@ -58,6 +63,10 @@ export const api = baseApi.injectEndpoints({
       invalidatesTags: (r, e, { id }) => ['Member', { type: 'Member', id }],
     }),
     deleteMember: b.mutation({ query: (id) => ({ url: `/admin/members/${id}`, method: 'DELETE' }), invalidatesTags: ['Member', 'Dashboard'] }),
+    bulkDeleteMembers: b.mutation({
+      query: (ids) => ({ url: '/admin/members/bulk-delete', method: 'POST', body: { ids } }),
+      invalidatesTags: ['Member', 'Dashboard', 'Audit'],
+    }),
     overrideMembership: b.mutation({
       query: ({ id, ...body }) => ({ url: `/admin/members/${id}/membership`, method: 'POST', body }),
       invalidatesTags: (r, e, { id }) => ['Member', { type: 'Member', id }, 'Dashboard', 'Audit'],
@@ -99,12 +108,20 @@ export const api = baseApi.injectEndpoints({
       invalidatesTags: ['Partner', 'Category', 'Audit'],
     }),
     deletePartner: b.mutation({ query: (id) => ({ url: `/admin/partners/${id}`, method: 'DELETE' }), invalidatesTags: ['Partner', 'Offer', 'Audit'] }),
+    bulkDeletePartners: b.mutation({
+      query: (ids) => ({ url: '/admin/partners/bulk-delete', method: 'POST', body: { ids } }),
+      invalidatesTags: ['Partner', 'Offer', 'Category', 'Audit'],
+    }),
     offers: b.query({ query: (p) => `/admin/offers${qs(p)}`, providesTags: ['Offer'] }),
     saveOffer: b.mutation({
       query: ({ id, ...body }) => ({ url: id ? `/admin/offers/${id}` : '/admin/offers', method: id ? 'PUT' : 'POST', body }),
       invalidatesTags: ['Offer', 'Partner', 'Tier', 'Audit'],
     }),
     deleteOffer: b.mutation({ query: (id) => ({ url: `/admin/offers/${id}`, method: 'DELETE' }), invalidatesTags: ['Offer', 'Partner', 'Audit'] }),
+    bulkDeleteOffers: b.mutation({
+      query: (ids) => ({ url: '/admin/offers/bulk-delete', method: 'POST', body: { ids } }),
+      invalidatesTags: ['Offer', 'Partner', 'Audit'],
+    }),
 
     // ── Admin: payments ───────────────────────────────────
     invoices: b.query({ query: (p) => `/admin/invoices${qs(p)}`, providesTags: ['Invoice'] }),
@@ -222,12 +239,12 @@ export const {
   useMeQuery, useLogoutApiMutation, useUpdateProfileMutation,
   usePublicContentQuery, usePublicTiersQuery, usePublicCategoriesQuery, usePublicPartnersQuery, usePublicGatewaysQuery, useVerifyCardQuery, useSubmitContactInquiryMutation,
   useMemberDashboardQuery, useMemberBenefitsQuery, useMemberInvoicesQuery, useMemberInvoiceQuery, useCheckoutMutation, useUploadSlipMutation,
-  useAdminDashboardQuery, useAuditLogsQuery,
+  useAdminDashboardQuery, useDemoDataSummaryQuery, useCleanDemoDataMutation, useAuditLogsQuery,
   useMemberCardsQuery, useMemberCardLogsQuery, useCardSheetMutation, useMarkCardsPrintedMutation, useMarkCardsIssuedMutation,
-  useMembersQuery, useMemberQuery, useCreateMemberMutation, useUpdateMemberMutation, useDeleteMemberMutation, useOverrideMembershipMutation,
+  useMembersQuery, useMemberQuery, useCreateMemberMutation, useUpdateMemberMutation, useDeleteMemberMutation, useBulkDeleteMembersMutation, useOverrideMembershipMutation,
   useTiersQuery, useSaveTierMutation, useDeleteTierMutation, useCategoriesQuery, useSaveCategoryMutation, useDeleteCategoryMutation,
-  usePartnersQuery, usePartnerOptionsQuery, usePartnerQuery, useSavePartnerMutation, useDeletePartnerMutation,
-  useOffersQuery, useSaveOfferMutation, useDeleteOfferMutation,
+  usePartnersQuery, usePartnerOptionsQuery, usePartnerQuery, useSavePartnerMutation, useDeletePartnerMutation, useBulkDeletePartnersMutation,
+  useOffersQuery, useSaveOfferMutation, useDeleteOfferMutation, useBulkDeleteOffersMutation,
   useInvoicesQuery, useInvoiceQuery, usePendingApprovalsQuery, useApproveInvoiceMutation, useRejectInvoiceMutation, useTransactionsQuery,
   usePaymentGatewaysQuery, useSavePaymentGatewayMutation, useDeletePaymentGatewayMutation,
   useSmsGatewaysQuery, useSaveSmsGatewayMutation, useDeleteSmsGatewayMutation, useTestSmsMutation, useSetSmsServiceMutation,

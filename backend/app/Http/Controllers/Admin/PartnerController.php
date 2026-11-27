@@ -74,6 +74,29 @@ class PartnerController extends Controller
         return response()->json(['message' => 'Partner deleted']);
     }
 
+    public function bulkDestroy(Request $request): JsonResponse
+    {
+        Gate::authorize('delete', Partner::class);
+        $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $ids = $request->input('ids');
+        $partners = Partner::query()->whereIn('id', $ids)->get();
+
+        $count = 0;
+        foreach ($partners as $partner) {
+            $this->catalog->deletePartner($partner);
+            $count++;
+        }
+
+        return response()->json([
+            'message' => "Successfully deleted {$count} partner(s)",
+            'deleted_count' => $count,
+        ]);
+    }
+
     // Offers
 
     public function offers(Request $request, OfferRepository $repo): AnonymousResourceCollection
@@ -117,5 +140,29 @@ class PartnerController extends Controller
         $offer->delete();
 
         return response()->json(['message' => 'Offer deleted']);
+    }
+
+    public function bulkDestroyOffers(Request $request, AuditLogger $audit): JsonResponse
+    {
+        Gate::authorize('delete', Offer::class);
+        $request->validate([
+            'ids' => ['required', 'array', 'min:1'],
+            'ids.*' => ['integer'],
+        ]);
+
+        $ids = $request->input('ids');
+        $offers = Offer::query()->whereIn('id', $ids)->get();
+
+        $count = 0;
+        foreach ($offers as $offer) {
+            $audit->log('offer.deleted', 'Deleted offer '.$offer->translate('title', 'en'), $offer);
+            $offer->delete();
+            $count++;
+        }
+
+        return response()->json([
+            'message' => "Successfully deleted {$count} offer(s)",
+            'deleted_count' => $count,
+        ]);
     }
 }

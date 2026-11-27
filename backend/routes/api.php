@@ -84,11 +84,14 @@ Route::middleware(['auth:sanctum', 'active'])->prefix('member')->group(function 
 // ── Admin ─────────────────────────────────────────────────────────────
 Route::middleware(['auth:sanctum', 'active', 'staff'])->prefix('admin')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->middleware('permission:dashboard.view');
+    Route::get('dashboard/demo-data-summary', [DashboardController::class, 'demoDataSummary'])->middleware('permission:dashboard.view');
+    Route::post('dashboard/clean-demo-data', [DashboardController::class, 'cleanDemoData'])->middleware('permission:dashboard.view');
     Route::get('audit-logs', [DashboardController::class, 'auditLogs'])->middleware('permission:audit.view');
 
     // Members
     Route::get('members', [MemberController::class, 'index'])->middleware('permission:members.view');
     Route::post('members', [MemberController::class, 'store'])->middleware('permission:members.create');
+    Route::post('members/bulk-delete', [MemberController::class, 'bulkDestroy'])->middleware('permission:members.delete');
     Route::get('members/{member}', [MemberController::class, 'show'])->middleware('permission:members.view');
     Route::put('members/{member}', [MemberController::class, 'update'])->middleware('permission:members.update');
     Route::delete('members/{member}', [MemberController::class, 'destroy'])->middleware('permission:members.delete');
@@ -119,6 +122,7 @@ Route::middleware(['auth:sanctum', 'active', 'staff'])->prefix('admin')->group(f
         Route::put('categories/{category}', [CatalogController::class, 'updateCategory']);
         Route::delete('categories/{category}', [CatalogController::class, 'destroyCategory']);
         Route::post('partners', [PartnerController::class, 'store']);
+        Route::post('partners/bulk-delete', [PartnerController::class, 'bulkDestroy']);
         Route::post('partners/{partner}', [PartnerController::class, 'update']); // multipart (logo) — POST for PHP file parsing
         Route::delete('partners/{partner}', [PartnerController::class, 'destroy']);
     });
@@ -127,6 +131,7 @@ Route::middleware(['auth:sanctum', 'active', 'staff'])->prefix('admin')->group(f
     Route::get('offers', [PartnerController::class, 'offers'])->middleware('permission:offers.view');
     Route::middleware('permission:offers.manage')->group(function () {
         Route::post('offers', [PartnerController::class, 'storeOffer']);
+        Route::post('offers/bulk-delete', [PartnerController::class, 'bulkDestroyOffers']);
         Route::put('offers/{offer}', [PartnerController::class, 'updateOffer']);
         Route::delete('offers/{offer}', [PartnerController::class, 'destroyOffer']);
     });

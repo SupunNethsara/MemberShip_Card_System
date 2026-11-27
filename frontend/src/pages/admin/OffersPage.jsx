@@ -1,24 +1,47 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, X } from 'lucide-react';
 import {
   Alert, Button, Can, Checkbox, ConfirmDialog, DataTable, Input, MultilingualInput, PageHeader, Segmented, Select,
   SlideOverDrawer, StatusBadge, TierBadge, Toggle,
 } from '../../components/ui';
-import { useDeleteOfferMutation, useOffersQuery, usePartnerOptionsQuery, useSaveOfferMutation, useTiersQuery } from '../../app/api';
+import { useBulkDeleteOffersMutation, useDeleteOfferMutation, useOffersQuery, usePartnerOptionsQuery, useSaveOfferMutation, useTiersQuery } from '../../app/api';
 import { useDocumentTitle, usePermission, useTableState, useToast } from '../../hooks';
 import { date, emptyTr, errorMessage, fieldErrors, offerValue, tr } from '../../lib/format';
 
 export default function OffersPage() {
   useDocumentTitle('Offers & Benefits');
   const can = usePermission();
+  const toast = useToast();
   const [search] = useSearchParams();
   const [params, update, raw] = useTableState({ partner: search.get('partner') || undefined });
   const { data, isLoading, isFetching, refetch } = useOffersQuery(params);
   const { data: partners = [] } = usePartnerOptionsQuery();
   const { data: tiersRes } = useTiersQuery({ per_page: 100, sort: 'priority', direction: 'asc' });
   const tiers = tiersRes?.data || [];
+  const [bulkDeleteOffers, { isLoading: deletingBulk }] = useBulkDeleteOffersMutation();
+  const [checkedIds, setCheckedIds] = useState(() => new Set());
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+
+  const rows = data?.data ?? [];
+  const pageIds = rows.map((r) => r.id);
+  const allOnPage = pageIds.length > 0 && pageIds.every((id) => checkedIds.has(id));
+  const someOnPage = pageIds.some((id) => checkedIds.has(id));
+
+  const toggle = (id) => setCheckedIds((s) => { const n = new Set(s); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  const togglePage = () => setCheckedIds((s) => { const n = new Set(s); allOnPage ? pageIds.forEach((id) => n.delete(id)) : pageIds.forEach((id) => n.add(id)); return n; });
+
+  const confirmBulkDelete = async () => {
+    try {
+      const res = await bulkDeleteOffers([...checkedIds]).unwrap();
+      toast(res.message || 'Offers deleted successfully');
+      setCheckedIds(new Set());
+      setBulkDeleteOpen(false);
+    } catch (e) {
+      toast(errorMessage(e), 'error');
+    }
+  };
 
   const status = (o) => {
     if (!o.is_active) return 'inactive';
@@ -27,6 +50,11 @@ export default function OffersPage() {
   };
 
   const columns = [
+    {
+      key: 'select', width: 44,
+      header: <Checkbox size="sm" checked={allOnPage} indeterminate={!allOnPage && someOnPage} onChange={togglePage} title="Select all on this page" />,
+      render: (r) => <div onClick={(e) => e.stopPropagation()}><Checkbox size="sm" checked={checkedIds.has(r.id)} onChange={() => toggle(r.id)} /></div>,
+    },
     {
       key: 'title', header: 'Offer', sortable: true,
       render: (r) => (
@@ -52,6 +80,21 @@ export default function OffersPage() {
         description="Discounts provided by partners, and which membership tiers unlock them."
         actions={<Can perform="offers.manage"><Button icon={Plus} onClick={() => setEditing({})}>New offer</Button></Can>}
       />
+
+      {checkedIds.size > 0 && (
+        <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-navy-200 bg-navy-50 px-4 py-2.5">
+          <span className="text-sm font-medium text-navy-900"><span className="tabular-nums">{checkedIds.size}</span> offer(s) selected</span>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <Can perform="offers.manage">
+              <Button size="sm" variant="danger" icon={Trash2} onClick={() => setBulkDeleteOpen(true)}>
+                Delete selected ({checkedIds.size})
+              </Button>
+            </Can>
+            <Button size="sm" variant="ghost" icon={X} onClick={() => setCheckedIds(new Set())}>Clear</Button>
+          </div>
+        </div>
+      )}
+
       <DataTable
         columns={columns}
         data={data}
@@ -70,6 +113,15 @@ export default function OffersPage() {
         emptyTitle="No offers found"
       />
       <OfferDrawer offer={editing} onClose={() => setEditing(null)} partners={partners} tiers={tiers} />
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onClose={() => setBulkDeleteOpen(false)}
+        title={`Delete ${checkedIds.size} offer${checkedIds.size > 1 ? 's' : ''}?`}
+        description={`This will permanently remove the selected ${checkedIds.size} partner discount offer(s).`}
+        confirmLabel={`Delete ${checkedIds.size} offer${checkedIds.size > 1 ? 's' : ''}`}
+        loading={deletingBulk}
+        onConfirm={confirmBulkDelete}
+      />
     </div>
   );
 }
